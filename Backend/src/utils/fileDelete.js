@@ -35,4 +35,5 @@ const deleteFromCloudinary = async(url) => {
     }
 }
 
+export default deleteFromCloudinary;
 

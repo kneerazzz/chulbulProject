@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
 import jwt from "jsonwebtoken"
+import { siTina } from 'simple-icons'
 
 
 const userSchema = new mongoose.Schema({
@@ -28,13 +29,49 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Password is required"],
     },
-    coverImage: {
+    profilePic: {
         type: String, //cloudinary
-        required: true,
+        default: 'https://res.cloudinary.com/dmrf8lhcf/image/upload/v1753587887/unc_rt6eou.jpg'
     },
-    avatar: {
+    bio: {
         type: String,
-        required: true,
+        default: ''
+    },
+    refreshToken: {
+        type: String,
+    },
+    streak: {
+        type: Number,
+        default: 0
+    },
+    completedTopics: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Topic"
+    }],
+    level: {
+        type: Number,
+        default: 1
+    },
+    dailyGoal: {
+        type: Number,
+        default: 1
+    },
+    interests: [{
+        type: String,
+        enum: ['frontend', 'backend', 'ai-ml', 'devOps', 'cybersecurity', 'Web3', 'database', 'system-design', 'algorithm'],
+    }],
+    skillLevel: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced', 'expert']
+    },
+    notificationPreferences: {
+        email: {
+            dailyReminder: {type: Boolean, default: true},
+            weeklyProgress: {type: Boolean, default: true},
+        },
+        push: {
+            streakReminder: {type: Boolean, default: true}
+        }
     }
 }, {timestamps: true})
 
