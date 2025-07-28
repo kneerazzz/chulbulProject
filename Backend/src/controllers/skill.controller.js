@@ -18,7 +18,7 @@ const createSkill = asyncHandler(async(req, res) => {
         throw new ApiError(401, "auth middleware is broken or user not found")
     }
 
-    const description = await generateSkillDescription(title)
+    const description = await generateSkillDescription(`${title} of category ${category}`, level)
 
     const existingSkill = await Skill.findOne({
         title: title.trim(),

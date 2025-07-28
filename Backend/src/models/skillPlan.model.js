@@ -12,9 +12,28 @@ const skillPlanSchema = new mongoose.Schema({
     },
     targetLevel: {
         type: String,
-        enum: ["beginner", "intermediate", "advanced", "expert"],
+        enum: ["Beginner", "Intermediate", "Advanced", "Expert"],
         required: true
     },
+    durationInDays: {
+        type: Number,
+        default: 30
+    },
+    currentDay: {
+        type: Number,
+        default: 1
+    },
+    completedDays: {
+        type: [Number],
+        default: []
+    },
+    isCompleted: {
+        type: Boolean,
+        default: false
+    },
+    lastDeliveredNote: {
+        type: Date
+    }
 
 
 }, {timestamps: true})
