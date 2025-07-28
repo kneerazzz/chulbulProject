@@ -68,7 +68,7 @@ const registerUser = asyncHandler(async(req, res) => {
     )
 
     if(!createdUser){
-        throw new ApiError(500, "Something went wrong while craating user")
+        throw new ApiError(500, "Something went wrong while creating user")
     }
 
 
@@ -120,7 +120,7 @@ const loginUser = asyncHandler(async(req, res) => {
         new ApiResponse(200, {
             user: loggedInUser, accessToken, refreshToken
         }),
-        "user Login successfull"
+        "user Logged In Successfully"
     )
 
 })
@@ -149,7 +149,7 @@ const logoutUser = asyncHandler(async(req, res) => {
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json(
-        new ApiResponse(200, {}, "Logout successful")
+        new ApiResponse(200, {}, "User Logged out successfully")
     )
 })
 
@@ -168,7 +168,11 @@ const getUserDetails = asyncHandler(async(req, res) => {
 const updateUserDetails = asyncHandler(async(req, res) =>{
     const {username, fullname, bio, interests} = req.body
 
-    if(username && username !== req.user?.username){
+    if(!username || !fullname || !bio || !interests){
+        throw new ApiError(400, "Nothing to update here")
+    }
+
+    if(username && username.toLowerCase() !== req.user?.username){
         const existingUser = await User.findOne({username: username})
 
         if(existingUser){
@@ -179,12 +183,12 @@ const updateUserDetails = asyncHandler(async(req, res) =>{
 
     const user = await User.findByIdAndUpdate(req.user?._id, {
         $set: {
-            username: username || req.user.username,
+            username: username.trim().toLowerCase() || req.user.username,
             fullname: fullname || req.user.fullname,
             bio: bio || req.user.bio,
             interests: interests || req.user.interests
         }
-    }, {new: true})
+    }, {new: true}).select("-password -refreshToken")
 
     if(!user){
         throw new ApiError(500, "something went wrong while updating details")
@@ -194,7 +198,7 @@ const updateUserDetails = asyncHandler(async(req, res) =>{
     return res
     .status(200)
     .json(
-        new ApiResponse(200, user, "User Details upadated successfully")
+        new ApiResponse(200, user, "User Details updated successfully")
     )
 
 })
@@ -284,7 +288,7 @@ const refreshAcessToken = asyncHandler(async(req, res) => {
         }
 
         if(incomingRefreshToken !== user.refreshToken){
-            throw new ApiError(401, "Refresh token is ezpired or used!")
+            throw new ApiError(401, "Refresh token is expired or used!")
         }
 
         const options = {
@@ -292,7 +296,7 @@ const refreshAcessToken = asyncHandler(async(req, res) => {
             secure: true
         }
 
-        const {accessToken, refreshToken} = generateAccessAndRefreshTokens(user._id)
+        const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
 
         return res
         .status(200)
