@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJwt } from '../middlewares/auth.middleware.js'
-import { completeCurrentDay, createSkillPlan, getAllSkillPlans, getSkillPlanById } from "../controllers/skillPlan.controller";
+import { completeCurrentDay, createSkillPlan, getAllSkillPlans, getSkillPlanById } from "../controllers/skillPlan.controller.js";
 
 const router = Router()
 
@@ -15,7 +15,7 @@ router.route('/c/:skillPlanId/get-skill-plan').get(
     getSkillPlanById
 )
 
-router.route('/c/get-skill-plans').get(
+router.route('/get-skill-plans').get(
     verifyJwt,
     getAllSkillPlans
 )

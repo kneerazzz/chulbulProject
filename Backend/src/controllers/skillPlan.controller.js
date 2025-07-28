@@ -53,10 +53,12 @@ const createSkillPlan = asyncHandler(async(req, res) => {
         throw new ApiError(500, "Something went wrong while generating the Skill Plan")
     }
 
+    const plan = await SkillPlan.findById(skillPlan._id).populate('skill')
+
     return res
     .status(200)
     .json(
-        new ApiResponse(200, skillPlan, "Skill Plan generated successfully")
+        new ApiResponse(200, plan, "Skill Plan generated successfully")
     )
 })
 
@@ -84,7 +86,7 @@ const getSkillPlanById = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiError(200, skillPlan, "Skill plan fetched successfully")
+        new ApiResponse(200, skillPlan, "Skill plan fetched successfully")
     )
 })
 
@@ -96,8 +98,8 @@ const getAllSkillPlans = asyncHandler(async(req, res) => {
     }
 
     const skillPlans = await SkillPlan.findOne({
-        user: new mongoose.Types.ObjectId(user._id).populate('skill')
-    })
+        user: new mongoose.Types.ObjectId(user._id)
+    }).populate('skill')
 
     if(!skillPlans.length && !skillPlans){
         throw new ApiError(400, "No skills plan found")
@@ -131,8 +133,8 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
 
     const today = skillPlan.currentDay
 
-    if(!skillPlan.completedDays.includes(currentDay)){
-        skillPlan.completedDays.push(currentDay)
+    if(!skillPlan.completedDays.includes(today)){
+        skillPlan.completedDays.push(today)
     }
 
     if(today < skillPlan.durationInDays){

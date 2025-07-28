@@ -170,6 +170,10 @@ const deleteSkill = asyncHandler(async(req, res) => {
 
     const skill = await Skill.findById(skillId)
 
+    if(!skill){
+        throw new ApiError(400, "No skill with this Id")
+    }
+
     if(!skill.createdBy.equals(user._id)){
         throw new ApiError(403, "Unauthorised request - request can't be fulfilled")
     }

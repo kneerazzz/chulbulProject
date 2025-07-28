@@ -15,6 +15,8 @@ const generateAccessAndRefreshTokens = async(userId) => {
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
 
+        user.refreshToken = refreshToken;
+
         await user.save({validateBeforeSave: false})
 
         return {accessToken, refreshToken}
@@ -107,6 +109,8 @@ const loginUser = asyncHandler(async(req, res) => {
         "-password -refreshToken"
     )
 
+
+
     const options = {
         httpOnly: true,
         secure: true
@@ -168,7 +172,7 @@ const getUserDetails = asyncHandler(async(req, res) => {
 const updateUserDetails = asyncHandler(async(req, res) =>{
     const {username, fullname, bio, interests} = req.body
 
-    if(!username || !fullname || !bio || !interests){
+    if(!username && !fullname && !bio && !interests){
         throw new ApiError(400, "Nothing to update here")
     }
 
@@ -181,9 +185,13 @@ const updateUserDetails = asyncHandler(async(req, res) =>{
 
     }
 
+    if(username){
+        username = username.trim().toLowerCase();
+    }
+
     const user = await User.findByIdAndUpdate(req.user?._id, {
         $set: {
-            username: username.trim().toLowerCase() || req.user.username,
+            username: username || req.user.username,
             fullname: fullname || req.user.fullname,
             bio: bio || req.user.bio,
             interests: interests || req.user.interests
@@ -272,14 +280,14 @@ const updateProfilePic = asyncHandler(async(req, res) => {
 })
 
 const refreshAcessToken = asyncHandler(async(req, res) => {
-    const incomingRefreshToken = req.cookies?.refreshToken   || req.body.refreshToken
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken
 
     if(!incomingRefreshToken){
         throw new ApiError(401, "Unauthorised request")
     }
 
     try {
-        const decodedToken = await jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
 
         const user = await User.findById(decodedToken._id)
 
@@ -297,6 +305,10 @@ const refreshAcessToken = asyncHandler(async(req, res) => {
         }
 
         const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
+
+        user.refreshToken = refreshToken;
+
+        await user.save({validateBeforeSave: true})
 
         return res
         .status(200)
