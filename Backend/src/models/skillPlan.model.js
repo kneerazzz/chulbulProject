@@ -33,6 +33,10 @@ const skillPlanSchema = new mongoose.Schema({
     },
     lastDeliveredNote: {
         type: Date
+    },
+    completedTopics: {
+        type: [String],
+        default: []
     }
 
 

@@ -4,6 +4,7 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import generateSkillDescription from "../utils/generateSkillDescription.js";
+import generateSkillLevel from "../utils/generateSkillLevel.js";
 
 const createSkill = asyncHandler(async(req, res) => {
     const {title, level, category } = req.body
@@ -11,6 +12,7 @@ const createSkill = asyncHandler(async(req, res) => {
     if(!title || !category){
         throw new ApiError(400, "Title or Category field is empty")
     }
+
 
     const user  = req.user;
 
@@ -28,6 +30,13 @@ const createSkill = asyncHandler(async(req, res) => {
 
     if(existingSkill){
         throw new ApiError(400, "Skill already exists")
+    }
+
+    if(!level){
+        level = await generateSkillLevel({
+            skillName: title,
+            category: category
+        })
     }
 
     const skill = await Skill.create({
