@@ -31,6 +31,7 @@ app.use(cookieParser())
 import userRouter from './routes/user.routes.js'
 import skillRouter from './routes/skill.routes.js'
 import skillPlanRouter from "./routes/skillPlan.routes.js"
+import dailyTopicRouter from "./routes/dailyTopic.routes.js"
 
 //url will be here
 
@@ -38,6 +39,7 @@ import skillPlanRouter from "./routes/skillPlan.routes.js"
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/skills", skillRouter)
 app.use("/api/v1/skillplans", skillPlanRouter)
+app.use("/api/v1/dailyTopics", dailyTopicRouter)
 
 
 export default app;
