@@ -4,6 +4,7 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { SkillPlan } from "../models/skillPlan.model.js";
+import { DailyTopic } from "../models/dailyTopic.model.js";
 
 
 const createSkillPlan = asyncHandler(async(req, res) => {
@@ -47,6 +48,7 @@ const createSkillPlan = asyncHandler(async(req, res) => {
         currentDay: 1,
         completedDays: [],
         isCompleted: false,
+        completedTopics: []
     })
 
     if(!skillPlan){
@@ -132,6 +134,15 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
     }
 
     const today = skillPlan.currentDay
+
+    const todayTopic = await DailyTopic.findOne({
+        skillPlan: skillPlan._id,
+        day: today
+    })
+
+    if(todayTopic?.topic && !skillPlan.completedTopics.includes(todayTopic.topic)){
+        skillPlan.completedTopics.push(todayTopic.topic)
+    }
 
     if(!skillPlan.completedDays.includes(today)){
         skillPlan.completedDays.push(today)

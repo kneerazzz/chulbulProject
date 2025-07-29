@@ -17,7 +17,23 @@ const dailyTopicSchema = new mongoose.Schema({
     description: {
         type: String,
         required: ""
-    }
+    },
+    content: {
+        type: String,
+        required: true
+    },
+    generatedAt: {
+        type: Date,
+        default: Date.now
+    },
+    optionalTip: {
+        type: String,
+        default: ""
+    },
+    isRegenrated: {
+        type: Boolean,
+        default: false
+    },
 }, {timestamps: true})
 
 
