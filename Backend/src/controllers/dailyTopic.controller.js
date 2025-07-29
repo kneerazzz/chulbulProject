@@ -112,6 +112,7 @@ const regenerateTodayTopic = asyncHandler(async(req, res) => {
         generatedAt: new Date(),
         optionalTip: regenratedContent.optionalTip,
         isRegenrated: true,
+        skillPlan: skillPlanId
     })
 
     if(!regenrateTodayTopic){

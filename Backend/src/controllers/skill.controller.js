@@ -7,7 +7,7 @@ import generateSkillDescription from "../utils/generateSkillDescription.js";
 import generateSkillLevel from "../utils/generateSkillLevel.js";
 
 const createSkill = asyncHandler(async(req, res) => {
-    const {title, level, category } = req.body
+    const {title, category } = req.body
 
     if(!title || !category){
         throw new ApiError(400, "Title or Category field is empty")
@@ -20,7 +20,6 @@ const createSkill = asyncHandler(async(req, res) => {
         throw new ApiError(401, "auth middleware is broken or user not found")
     }
 
-    const description = await generateSkillDescription(`${title} of category ${category}`, level)
 
     const existingSkill = await Skill.findOne({
         title: title.trim(),
@@ -31,6 +30,7 @@ const createSkill = asyncHandler(async(req, res) => {
     if(existingSkill){
         throw new ApiError(400, "Skill already exists")
     }
+    let level;
 
     if(!level){
         level = await generateSkillLevel({
@@ -38,6 +38,8 @@ const createSkill = asyncHandler(async(req, res) => {
             category: category
         })
     }
+
+    const description = await generateSkillDescription(`${title} of category ${category}`, level)
 
     const skill = await Skill.create({
         title: title.trim(),

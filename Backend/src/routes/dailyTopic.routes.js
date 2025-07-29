@@ -10,7 +10,7 @@ router.route("/c/:skillPlanId/create-topic").post(
     createDailyTopic
 )
 
-router.route("/c/:skillPlanId/regenrate-topic").patch(
+router.route("/c/:skillPlanId/regenrate-topic").get(
     verifyJwt,
     regenerateTodayTopic
 )
@@ -35,7 +35,7 @@ router.route("/c/:skillPlanId/delete-topic").delete(
     deleteTodayTopic
 )
 
-router.route("/c/:skillPlan/get-topic").get(
+router.route("/c/:skillPlanId/get-topic").get(
     verifyJwt,
     getTopicByDay
 )

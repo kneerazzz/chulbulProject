@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJwt } from '../middlewares/auth.middleware.js'
-import { completeCurrentDay, createSkillPlan, getAllSkillPlans, getSkillPlanById } from "../controllers/skillPlan.controller.js";
+import { completeCurrentDay, createSkillPlan, getAllSkillPlans,deleteSkillPlan, getSkillPlanById, updateSkillPlan } from "../controllers/skillPlan.controller.js";
 
 const router = Router()
 
@@ -23,6 +23,16 @@ router.route('/get-skill-plans').get(
 router.route('/c/:skillPlanId/complete-current-day').patch(
     verifyJwt,
     completeCurrentDay
+)
+
+router.route("/c/:skillPlanId/update-skill-plan").patch(
+    verifyJwt,
+    updateSkillPlan
+)
+
+router.route("/c/:skillPlanId/delete-skill-plan").delete(
+    verifyJwt,
+    deleteSkillPlan
 )
 
 

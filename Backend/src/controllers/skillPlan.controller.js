@@ -99,7 +99,7 @@ const getAllSkillPlans = asyncHandler(async(req, res) => {
         throw new ApiError(401, "Auth middleware broken - user not found")
     }
 
-    const skillPlans = await SkillPlan.findOne({
+    const skillPlans = await SkillPlan.find({
         user: new mongoose.Types.ObjectId(user._id)
     }).populate('skill')
 
@@ -168,11 +168,88 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
 })
 
 
+const updateSkillPlan = asyncHandler(async(req, res) => {
+    const {skillPlanId} = req.params;
+
+    const {targetLevel, durationInDays} = req.body;
+
+    if(!targetLevel && !durationInDays){
+        throw new ApiError(400,"Nothing to update here")
+    }
+
+    if(!skillPlanId){
+        throw new ApiError(400, "Skill plan id not found")
+    }
+
+    const user = req.user
+
+    if(!user){
+        throw new ApiError(400, "Auth middleware broken - user not found")
+    }
+
+    const skillPlan = await SkillPlan.findById(skillPlanId).populate("skill")
+
+
+    if(!skillPlan){
+        throw new ApiError(400, "Skill plan not found")
+    }
+
+    if(!skillPlan.user.equals(user._id)){
+        throw new ApiError(401, "Unauthorised access")
+    }
+
+    skillPlan.targetLevel = targetLevel;
+
+    skillPlan.durationInDays = durationInDays;
+
+    await skillPlan.save({validateBeforeSave: false})
+
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, skillPlan, "Skill plan updated successfully")
+    )
+1
+})
+
+const deleteSkillPlan = asyncHandler(async(req, res) => {
+    const {skillPlanId} = req.params;
+
+    if(!skillPlanId){
+        throw new ApiError(400, "skill plan id not found")
+    }
+
+    const user = req.user;
+
+    if(!user){
+        throw new ApiError(400, "auth middleware is broken - User not found")
+    }
+
+
+    const skillPlan = await SkillPlan.findOneAndDelete({
+        _id: skillPlanId,
+        user: user._id
+    })
+
+    if(!skillPlan){
+        throw new ApiError(401, "Either skill plan not found or user is not authenticated to delete this plan")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, skillPlan._id, "Skill plan deleted successfully")
+    )
+})
+
 
 
 export {
     createSkillPlan,
     getAllSkillPlans,
     getSkillPlanById,
-    completeCurrentDay
+    updateSkillPlan,
+    completeCurrentDay,
+    deleteSkillPlan,
 }
