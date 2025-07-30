@@ -52,10 +52,6 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 1
     },
-    dailyGoal: {
-        type: Number,
-        default: 1
-    },
     interests: {
         type: [String],
         enum: ['frontend', 'backend', 'ai-ml', 'devOps', 'cybersecurity', 'web3', 'database', 'system-design', 'algorithm'],
@@ -65,6 +61,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['beginner', 'intermediate', 'advanced', 'expert'],
         default: 'beginner'
+    },
+    lastCompletedDate: {
+        type: Date,
+        default: null
+    },
+    longestStreak: {
+        type: Number,
+        default: 0
     },
     notificationPreferences: {
         email: {

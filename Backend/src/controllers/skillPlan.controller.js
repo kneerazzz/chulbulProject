@@ -5,7 +5,9 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { SkillPlan } from "../models/skillPlan.model.js";
 import { DailyTopic } from "../models/dailyTopic.model.js";
-import { use } from "react";
+import { updateStreak } from "../utils/streak.js";
+import { shouldNotify } from "../utils/shouldNotify.js";
+import { Notification } from "../models/notification.model.js";
 
 
 const createSkillPlan = asyncHandler(async(req, res) => {
@@ -167,12 +169,36 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
         throw new ApiError(500, "Unexpected state in day completion")
     }
 
+    updateStreak(user)
+
+
     skillPlan.lastDeliveredNote = new Date()
 
     await skillPlan.save()
 
     await user.save({validateBeforeSave: false})
 
+    if(user.streak > 1 && shouldNotify(user, "reminder")){
+        await Notification.create({
+            user: user._id,
+            message: `You're on a ${user.streak}-day streak. Keep going`,
+            type: "reminder"
+        })
+    }
+
+    if(skillPlan.isCompleted === true && shouldNotify(user, "achievement")){
+        await Notification.create({
+            user: user._id,
+            message: `You have completed the entire skill plan of ${skillPlan.durationInDays} on the topic ${skill.title}`,
+            type: "achievement"
+        })
+    }
+
+    await Notification.create({
+        user: user._id,
+        message: `You have completed ${today} of skill ${skill.title}. Keep going`,
+        type: "achievement"
+    })
 
     return res
     .status(200)
@@ -292,8 +318,6 @@ const getSkillPlanProgress = asyncHandler(async(req, res) => {
     .json(
         new ApiResponse(200, progress, "Progress of the plan fetched")
     )
-
-    
 })
 
 
