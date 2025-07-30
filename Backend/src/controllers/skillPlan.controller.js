@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { SkillPlan } from "../models/skillPlan.model.js";
 import { DailyTopic } from "../models/dailyTopic.model.js";
+import { use } from "react";
 
 
 const createSkillPlan = asyncHandler(async(req, res) => {
@@ -256,6 +257,44 @@ const deleteSkillPlan = asyncHandler(async(req, res) => {
     )
 })
 
+
+const getSkillPlanProgress = asyncHandler(async(req, res) => {
+    const {skillPlanId} = req.params;
+
+    if(!skillPlanId){
+        throw new ApiError(400, "No skill plan id found")
+    }
+
+    const user  = req.user;
+
+    if(!user){
+        throw new ApiError(400, "Auth middleware broken - user not found")
+    }
+
+    const skillPlan = await SkillPlan.findById(skillPlanId)
+
+    if(!skillPlan){
+        throw new ApiError(400, "No skill plan found")
+    }
+
+    if(!skillPlan.user.equals(user._id)){
+        throw new ApiError(403, "Unauthorised access can't access other user detsils")
+    }
+
+    const completedSubtopicsLength = skillPlan.completedSubtopics.length || 0;
+
+    const durationOfPlan = skillPlan.durationInDays;
+
+    const progress = (completedSubtopicsLength/durationOfPlan) * 100;
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, progress, "Progress of the plan fetched")
+    )
+
+    
+})
 
 
 export {

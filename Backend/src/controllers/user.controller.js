@@ -205,6 +205,14 @@ const updateUserDetails = asyncHandler(async(req, res) =>{
         }
     }, {new: true}).select("-password -refreshToken")
 
+    let recommendations = [];
+
+    if(interests && interests.length > 0){
+        recommendations = [...new Set(
+            interests.flatMap(domain => skillsMap[domain] || [])
+        )]
+    }
+
     if(!user){
         throw new ApiError(500, "something went wrong while updating details")
     }

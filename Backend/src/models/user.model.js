@@ -56,11 +56,11 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 1
     },
-    interests: [{
-        type: String,
+    interests: {
+        type: [String],
         enum: ['frontend', 'backend', 'ai-ml', 'devOps', 'cybersecurity', 'web3', 'database', 'system-design', 'algorithm'],
         default: []
-    }],
+    },
     skillLevel: {
         type: String,
         enum: ['beginner', 'intermediate', 'advanced', 'expert'],

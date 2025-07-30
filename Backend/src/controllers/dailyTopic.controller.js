@@ -5,6 +5,7 @@ import generateTopicContent from "../utils/generateContent.js";
 import { Skill } from "../models/skill.model.js";
 import { DailyTopic } from "../models/dailyTopic.model.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import { AiHistory } from "../models/aiHistory.model.js";
 
 
 const createDailyTopic = asyncHandler(async(req, res) => {
@@ -48,6 +49,19 @@ const createDailyTopic = asyncHandler(async(req, res) => {
         skillPlan: skillPlan._id,
         optionalTip: todayContent.optionalTip,
         day: currentDay
+    })
+
+    await AiHistory.create({
+        user: user._id,
+        skillPlan: skillPlanId,
+        day: currentDay,
+        generatedTopics: [
+            {
+                title: todayContent.topic,
+                generatedAt: new Date(),
+                model: "Gemini 1.5 pro"
+            }
+        ]
     })
 
     if(!todayTopic){
