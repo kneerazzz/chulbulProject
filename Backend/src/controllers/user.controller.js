@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js";
 import uploadOnCloudinary from "../utils/fileUpload.js";
 import deleteFromCloudinary from "../utils/fileDelete.js";
 import jwt from 'jsonwebtoken'
+import { recommendedSkills as skillsMap } from "../utils/recommendedSkills.js";
 
 
 const generateAccessAndRefreshTokens = async(userId) => {
@@ -36,9 +37,6 @@ const registerUser = asyncHandler(async(req, res) => {
     ) {
         throw new ApiError(400, "All fields are required")
     }
-    if(interests.length === 0){
-        throw new ApiError(400, "interest field is required")
-    }
 
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
@@ -65,6 +63,15 @@ const registerUser = asyncHandler(async(req, res) => {
         interests,
     })
 
+    let recommendations = [];
+
+    if(interests && interests.length > 0){
+        recommendations = [...new Set(
+            interests.flatMap(domain => skillsMap[domain] || [])
+        )]
+    }
+
+
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
@@ -77,7 +84,7 @@ const registerUser = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, createdUser, "User registered successfully")
+        new ApiResponse(200, {user: createdUser, recommendedSkills: recommendations}, "User registered successfully")
     )
 
 })
