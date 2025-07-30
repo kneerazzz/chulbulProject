@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { StringDecoder } from "string_decoder";
 
 const skillSchema = new mongoose.Schema({
     title: {
@@ -8,16 +9,16 @@ const skillSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        default: ""
+        required: true
     },
     level: {
         type: String,
         enum: ["beginner", "intermediate", "advanced", "expert"],
-        default: "Beginner",
+        default: "beginner",
     },
     category: {
         type: String,
-        enum: ["frontend", "backend", "ai-ml", "Database", "devops", "web3", "cybersecurity"]
+        enum: ["frontend", "backend", "ai-ml", "database", "devops", "web3", "cybersecurity", 'system-design']
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,

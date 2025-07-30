@@ -44,9 +44,9 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    completedTopics: [{
+    completedSkills: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Topic"
+        ref: "skill"
     }],
     level: {
         type: Number,
@@ -58,11 +58,12 @@ const userSchema = new mongoose.Schema({
     },
     interests: [{
         type: String,
-        enum: ['frontend', 'backend', 'ai-ml', 'devOps', 'cybersecurity', 'Web3', 'database', 'system-design', 'algorithm'],
+        enum: ['frontend', 'backend', 'ai-ml', 'devOps', 'cybersecurity', 'web3', 'database', 'system-design', 'algorithm'],
     }],
     skillLevel: {
         type: String,
-        enum: ['beginner', 'intermediate', 'advanced', 'expert']
+        enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+        default: 'beginner'
     },
     notificationPreferences: {
         email: {

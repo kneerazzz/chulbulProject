@@ -16,7 +16,7 @@ const dailyTopicSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: ""
+        required: true
     },
     content: {
         type: String,

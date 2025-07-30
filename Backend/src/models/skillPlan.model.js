@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import { type } from "os";
+import { title } from "process";
+import { stringify } from "querystring";
 
 const skillPlanSchema = new mongoose.Schema({
     skill: {
@@ -12,7 +15,7 @@ const skillPlanSchema = new mongoose.Schema({
     },
     targetLevel: {
         type: String,
-        enum: ["Beginner", "Intermediate", "Advanced", "Expert"],
+        enum: ["beginner", "intermediate", "advanced", "expert"],
         required: true
     },
     durationInDays: {
@@ -34,8 +37,13 @@ const skillPlanSchema = new mongoose.Schema({
     lastDeliveredNote: {
         type: Date
     },
-    completedTopics: {
-        type: [String],
+    completedSubtopics: {
+        type: [
+            {
+                title: {type: String, required: true},
+                completedAt: {type: Date, default: Date.now}
+            }
+        ],
         default: []
     }
 

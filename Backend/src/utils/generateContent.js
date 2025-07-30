@@ -1,10 +1,10 @@
 import { geminiClient } from "./geminiClient.js";
 import { ApiError } from "./apiError.js";
 
-const generateTopicContent = async ({ skillName, targetLevel = "beginner", category, duration, currentDay, completedTopics = [] }) => {
+const generateTopicContent = async ({ skillName, targetLevel = "beginner", category, duration, currentDay, completedSubtopics = [] }) => {
   try {
-    const completedList = completedTopics.length
-      ? `They have already completed the following topics:\n- ${completedTopics.join("\n- ")}`
+    const completedList = completedSubtopics.length
+      ? `They have already completed the following topics:\n- ${completedSubtopics.map(sub => `${sub.title} (on ${new Date(sub.completedAt).toLocaleDateString()})`).join("\n- ")}`
       : `This is their first day, no topics completed yet.`;
 
     const prompt = `

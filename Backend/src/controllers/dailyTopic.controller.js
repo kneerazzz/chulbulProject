@@ -31,13 +31,13 @@ const createDailyTopic = asyncHandler(async(req, res) => {
 
     const {title: skillName, category} = skill
 
-    const {targetLevel, duration, currentDay, completedTopics} = skillPlan
+    const {targetLevel, duration, currentDay, completedSubtopics} = skillPlan
 
     const todayContent = await generateTopicContent({
-        skillName, targetLevel, category, duration, currentDay, completedTopics
+        skillName, targetLevel, category, duration, currentDay, completedSubtopics
     })
 
-    if(completedTopics.includes(todayContent.topic)){
+    if(completedSubtopics.some(sub => sub.title.toLowerCase() === todayTopic.topic.toLowerCase())){
         throw new ApiError(500, "AI returned the topic which is already generated. Please generation again")
     }
 
@@ -87,7 +87,7 @@ const regenerateTodayTopic = asyncHandler(async(req, res) => {
 
     const {title: skillName, category} = skill
 
-    const {targetLevel, currentDay, completedTopics, duration} = skillPlan
+    const {targetLevel, currentDay, completedSubtopics, duration} = skillPlan
 
 
     const regenratedContent = await generateTopicContent({
@@ -95,7 +95,7 @@ const regenerateTodayTopic = asyncHandler(async(req, res) => {
         category,
         targetLevel,
         duration,
-        completedTopics,
+        completedSubtopics,
         currentDay
     })
 
@@ -149,16 +149,16 @@ const getAllLearnedTopics = asyncHandler(async(req, res) => {
         throw new ApiError(401, "Unauthorised request - can't access the learned topics")
     }
 
-    const completedTopic = skillPlan.completedTopics
+    const completedTopics = skillPlan.completedSubtopics
 
-    if(!completedTopic.length){
+    if(!completedTopics.length){
         throw new ApiError(500, "No topics has been completed")
     }
 
     return res
     .status(200)
     .json(
-        new ApiResponse(200, completedTopic, "Learned topics fetched")
+        new ApiResponse(200, completedTopics, "Learned topics fetched")
     )
 })
 

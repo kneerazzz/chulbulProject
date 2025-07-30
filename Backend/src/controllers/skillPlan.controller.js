@@ -48,7 +48,7 @@ const createSkillPlan = asyncHandler(async(req, res) => {
         currentDay: 1,
         completedDays: [],
         isCompleted: false,
-        completedTopics: []
+        completedSubtopics: []
     })
 
     if(!skillPlan){
@@ -133,6 +133,8 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
         throw new ApiError(400, "No skill plan found")
     }
 
+    const skill = await Skill.findById(skillPlan.skill)
+
     const today = skillPlan.currentDay
 
     const todayTopic = await DailyTopic.findOne({
@@ -140,8 +142,11 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
         day: today
     })
 
-    if(todayTopic?.topic && !skillPlan.completedTopics.includes(todayTopic.topic)){
-        skillPlan.completedTopics.push(todayTopic.topic)
+    if(todayTopic?.topic && !skillPlan.completedSubtopics.some(sub => sub.title.toLowerCase() === todayTopic.topic.toLowerCase())){
+        skillPlan.completedSubtopics.push({
+            title: todayTopic.topic,
+            completedAt: new Date()
+        })
     }
 
     if(!skillPlan.completedDays.includes(today)){
@@ -151,13 +156,21 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
     if(today < skillPlan.durationInDays){
         skillPlan.currentDay += 1;
     }
+    else if(today>=skillPlan.durationInDays){
+        skillPlan.isCompleted = true
+        if(!user.completedSkills.includes(skill._id)){
+            user.completedSkills.push(skill._id)
+        }
+    }
     else {
-        skillPlan.isCompleted = true;
+        throw new ApiError(500, "Unexpected state in day completion")
     }
 
     skillPlan.lastDeliveredNote = new Date()
 
     await skillPlan.save()
+
+    await user.save({validateBeforeSave: false})
 
 
     return res
