@@ -5,12 +5,12 @@ import { deleteAiHistory, getAiHistory } from "../controllers/aiHistory.controll
 const router = Router()
 
 
-router.route("/c/get-history").get(
+router.route("/get-ai-history").get(
     verifyJwt,
     getAiHistory
 )
 
-router.route("/c/:skillPlanId/delete-history").delete(
+router.route("/c/:skillPlanId/delete-ai-history").delete(
     verifyJwt,
     deleteAiHistory
 )

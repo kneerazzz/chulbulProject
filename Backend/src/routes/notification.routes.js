@@ -6,7 +6,7 @@ import { deleteNotification, getAllNotifications, markAllNotificationAsRead, mar
 const router = Router()
 
 
-router.route("/c/get-all-notifications").get(
+router.route("/get-all-notifications").get(
     verifyJwt,
     getAllNotifications
 )
@@ -16,7 +16,7 @@ router.route("/c/:notificationId/mark-as-read").patch(
     markNotificationAsRead
 )
 
-router.route("/c/mark-all-notication-read").patch(
+router.route("/mark-all-notication-read").patch(
     verifyJwt,
     markAllNotificationAsRead
 )
