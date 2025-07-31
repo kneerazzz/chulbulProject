@@ -34,6 +34,7 @@ import skillPlanRouter from "./routes/skillPlan.routes.js"
 import dailyTopicRouter from "./routes/dailyTopic.routes.js"
 import aiHistoryRouter from "./routes/aiHistory.routes.js" 
 import notificationRouter from "./routes/notification.routes.js"
+import notesRouter from "./routes/notes.routes.js"
 //url will be here
 
 
@@ -43,6 +44,7 @@ app.use("/api/v1/skillplans", skillPlanRouter)
 app.use("/api/v1/dailyTopics", dailyTopicRouter)
 app.use("/api/v1/aiHistory", aiHistoryRouter)
 app.use("/api/v1/notifications", notificationRouter)
+app.use("/api/v1/notes", notesRouter)
 
 
 export default app;

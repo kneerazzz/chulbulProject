@@ -8,6 +8,7 @@ import { DailyTopic } from "../models/dailyTopic.model.js";
 import { updateStreak } from "../utils/streak.js";
 import { shouldNotify } from "../utils/shouldNotify.js";
 import { Notification } from "../models/notification.model.js";
+import { Notes } from "../models/notes.model.js";
 
 
 const createSkillPlan = asyncHandler(async(req, res) => {
@@ -119,6 +120,8 @@ const getAllSkillPlans = asyncHandler(async(req, res) => {
 
 const completeCurrentDay = asyncHandler(async(req, res) => {
 
+    const {notesContent} = req.body
+
 
     const {skillPlanId} = req.params;
 
@@ -153,6 +156,10 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
     }
 
     if(!skillPlan.completedDays.includes(today)){
+        throw new ApiError(400, "Day already marked as complete")
+    }
+
+    if(!skillPlan.completedDays.includes(today)){
         skillPlan.completedDays.push(today)
     }
 
@@ -174,9 +181,22 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
 
     skillPlan.lastDeliveredNote = new Date()
 
-    await skillPlan.save()
+    await Promise.all([
+        skillPlan.save(),
+        user.save({validateBeforeSave: false})
+    ])
 
-    await user.save({validateBeforeSave: false})
+
+
+    if(notesContent){
+        await Notes.create({
+            user: user._id,
+            skill: skill._id,
+            skillPlan: skillPlan._id,
+            content: notesContent,
+            day: today
+        })
+    }
 
     if(user.streak > 1 && shouldNotify(user, "reminder")){
         await Notification.create({
@@ -328,4 +348,5 @@ export {
     updateSkillPlan,
     completeCurrentDay,
     deleteSkillPlan,
+    getSkillPlanProgress
 }
