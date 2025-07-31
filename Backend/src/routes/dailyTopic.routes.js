@@ -1,17 +1,20 @@
 import {Router} from 'express'
 import { verifyJwt } from '../middlewares/auth.middleware.js';
 import { createDailyTopic, deleteTodayTopic, getAllLearnedTopics, getAllTopicsForPlan, getTodayTopic, getTopicByDay, regenerateTodayTopic } from '../controllers/dailyTopic.controller.js';
+import { geminiLimiter } from '../middlewares/geminiLimiter.js';
 
 const router = Router()
 
 
 router.route("/c/:skillPlanId/create-topic").post(
     verifyJwt,
+    geminiLimiter,
     createDailyTopic
 )
 
 router.route("/c/:skillPlanId/regenrate-topic").get(
     verifyJwt,
+    geminiLimiter,
     regenerateTodayTopic
 )
 

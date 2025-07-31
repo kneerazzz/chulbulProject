@@ -35,7 +35,7 @@ const getAiHistory = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, aiHistory, "AI history created successfully")
+        new ApiResponse(200, aiHistory, "AI history fetched successfully")
     )
 })
 

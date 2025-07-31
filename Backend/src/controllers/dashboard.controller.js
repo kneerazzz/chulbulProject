@@ -1,6 +1,6 @@
 import { DailyTopic } from "../models/dailyTopic.model.js";
 import { Notes } from "../models/notes.model.js";
-import { SkillPlan } from "../models/skillPlan.model";
+import { SkillPlan } from "../models/skillPlan.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";

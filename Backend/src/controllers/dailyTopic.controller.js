@@ -38,7 +38,7 @@ const createDailyTopic = asyncHandler(async(req, res) => {
         skillName, targetLevel, category, duration, currentDay, completedSubtopics
     })
 
-    if(completedSubtopics.some(sub => sub.title.toLowerCase() === todayTopic.topic.toLowerCase())){
+    if(completedSubtopics.some(sub => sub.title.toLowerCase() === todayContent.topic.toLowerCase())){
         throw new ApiError(500, "AI returned the topic which is already generated. Please generation again")
     }
 

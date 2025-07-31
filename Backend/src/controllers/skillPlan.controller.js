@@ -155,7 +155,7 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
         })
     }
 
-    if(!skillPlan.completedDays.includes(today)){
+    if(skillPlan.completedDays.includes(today)){
         throw new ApiError(400, "Day already marked as complete")
     }
 

@@ -6,6 +6,8 @@ import uploadOnCloudinary from "../utils/fileUpload.js";
 import deleteFromCloudinary from "../utils/fileDelete.js";
 import jwt from 'jsonwebtoken'
 import { recommendedSkills as skillsMap } from "../utils/recommendedSkills.js";
+import validator from 'validator'
+import { sendEmail } from "../utils/email.js";
 
 
 const generateAccessAndRefreshTokens = async(userId) => {
@@ -37,6 +39,23 @@ const registerUser = asyncHandler(async(req, res) => {
     ) {
         throw new ApiError(400, "All fields are required")
     }
+
+    if(!validator.isEmail(email)){
+        throw new ApiError(400, "Invalid email address")
+    }
+
+    if(!validator.isStrongPassword(password, {
+        minLength: 8,
+        minLowercase: 1,
+        minNumbers: 1,
+    })){
+        throw new ApiError(400, "Password is not strong enough. Please change password")
+    }
+
+    if(username.trim().length < 4){
+        throw new ApiError(400, "Username should be bigger than 4 letters")
+    }
+
 
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
@@ -79,6 +98,13 @@ const registerUser = asyncHandler(async(req, res) => {
     if(!createdUser){
         throw new ApiError(500, "Something went wrong while creating user")
     }
+
+    await sendEmail({
+        to: createdUser.email,
+        subject: "Account creation rat",
+        text: `Congratulations ${createdUser.fullname}, you have officially joined rats`,
+        html: `<h1>Congratulations!</h1><p>On joinging rats <strong>${createdUser.fullname}</strong></p>`
+    })
 
 
     return res
