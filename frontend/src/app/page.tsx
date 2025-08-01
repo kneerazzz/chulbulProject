@@ -1,7 +1,13 @@
-import Image from "next/image";
+'use client'
+import Button from "@/components/ui/button";
+import React from "react";
 
 export default function Home() {
   return (
-    <div className="bg-red-400 p-4 text-white font-bold">Starting</div>
+    <div>
+      <Button onClick={() => alert("just checking")} variant="primary" type="button">
+        Get Started
+      </Button>
+    </div>
   );
 }
