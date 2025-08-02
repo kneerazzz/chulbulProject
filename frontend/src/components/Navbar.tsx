@@ -9,8 +9,8 @@ const Navbar = () => {
   const isLoggedIn = false; // Replace with real auth check later
 
   return (
-    <header className="border-b bg-black">
-      <Container className="flex items-center justify-between h-16">
+    <header className="w-full bg-black/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+      <Container className="mx-auto max-w-[1200px] px-4 md:px-8 flex items-center justify-between h-16">
         {/* LEFT: Logo */}
         <div className="flex items-center">
           <Logo />
