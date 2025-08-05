@@ -52,12 +52,12 @@ const Navbar = () => {
         <div className="flex items-center gap-3">
           {!isLoggedIn ? (
             <>
-              <button className='text-[13px] font-medium cursor-pointer hover:bg-gray-800 text-gray-250 transition-all px-[9px] py-[6px] rounded-lg hover:text-white'>
+              <Link href="/login" className='text-[13px] font-medium cursor-pointer hover:bg-gray-800 text-gray-250 transition-all px-[9px] py-[6px] rounded-lg hover:text-white'>
                 Log in
-              </button>
-              <button className='bg-gray-100 cursor-pointer hover:bg-white transition-all  text-black text-[13px] py-[6px] px-[9px] font-medium rounded-lg'>
+              </Link>
+              <Link href="/signup" className='bg-gray-100 cursor-pointer hover:bg-white transition-all  text-black text-[13px] py-[6px] px-[9px] font-medium rounded-lg'>
                 Sign up
-              </button>
+              </Link>
             </>
           ) : (
             <>
