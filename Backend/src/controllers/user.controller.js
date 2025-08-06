@@ -31,7 +31,8 @@ const generateAccessAndRefreshTokens = async(userId) => {
 }
 
 const registerUser = asyncHandler(async(req, res) => {
-    const {email, password, fullname, username, bio, interests, skillLevel} = req.body;
+    const {email, password, fullname, username} = req.body;
+    console.log("user Details", req.body)
 
     if(
         [fullname, email, username, password].some((index) => 
@@ -64,36 +65,25 @@ const registerUser = asyncHandler(async(req, res) => {
         throw new ApiError(400, "User with similar username or email already exist")
     }
 
-    const profilePicLocalPath = req.file?.path;
-    let profilePic;
-    if(profilePicLocalPath){
-        profilePic = await uploadOnCloudinary(profilePicLocalPath)
-
-    }
 
     const user = await User.create({
         username: username.toLowerCase(),
         fullname,
-        bio,
         email,
         password, 
-        profilePic: profilePic?.url,
-        skillLevel,
-        interests,
     })
-
-    let recommendations = [];
-
-    if(interests && interests.length > 0){
-        recommendations = [...new Set(
-            interests.flatMap(domain => skillsMap[domain] || [])
-        )]
-    }
 
 
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
+
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(createdUser._id)
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
 
     if(!createdUser){
         throw new ApiError(500, "Something went wrong while creating user")
@@ -109,8 +99,10 @@ const registerUser = asyncHandler(async(req, res) => {
 
     return res
     .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
-        new ApiResponse(200, {user: createdUser, recommendedSkills: recommendations}, "User registered successfully")
+        new ApiResponse(200, {user: createdUser, accessToken, refreshToken}, "User registered successfully")
     )
 
 })
@@ -247,7 +239,7 @@ const updateUserDetails = asyncHandler(async(req, res) =>{
     return res
     .status(200)
     .json(
-        new ApiResponse(200, user, "User Details updated successfully")
+        new ApiResponse(200, {userDetails: user, recommendedSkills: recommendations }, "User Details updated successfully")
     )
 
 })
