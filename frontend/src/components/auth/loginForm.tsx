@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/store/auth";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 const LoginSchema = z.object({
   identifier: z.string().min(1, {
@@ -30,6 +33,10 @@ const LoginSchema = z.object({
 export function LoginAuthForm() {
   const [isLoading, setIsLoading] = useState(false);
 
+  const {login} = useAuth();
+
+  const router = useRouter()
+
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -42,8 +49,17 @@ export function LoginAuthForm() {
     setIsLoading(true);
     try {
       // Simulated login request
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
+      const payload = {
+        username: data.identifier.includes("@") ? undefined : data.identifier,
+        email: data.identifier.includes("@") ? data.identifier : undefined,
+        password: data.password
+      };
+      const res = await api.post("/users/login", payload);
+      const {user, accessToken, refreshToken} = res.data.data
+
+      login(user, accessToken, refreshToken)
+      router.push("/dashboard")
       toast.success("Login successful!", {
         description: `Welcome back, ${data.identifier}`,
       });

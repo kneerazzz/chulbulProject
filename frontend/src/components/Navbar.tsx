@@ -4,9 +4,14 @@ import Link from 'next/link';
 import Logo from './ui/logo';
 import Container from './ui/container';
 import NotificationIcon from './ui/notificaions';
+import { useAuth } from '@/store/auth';
 
 const Navbar = () => {
-  const isLoggedIn = false; // Replace with real auth check later
+
+  const {isAuthenticated, user, logout} =  useAuth();
+
+  const profilePic = user?.profilePic;
+
 
   return (
     <header className="w-full bg-black/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
@@ -18,7 +23,7 @@ const Navbar = () => {
 
         {/* CENTER: Nav links */}
         <div className="flex items-center gap-4">
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <>
               <Link href="/dashboard" className="text-[13px] font-medium cursor-pointer hover:bg-gray-900 text-gray-400 hover:text-gray-50 transition-all px-[7px] py-[5px] bg-black rounded-lg">
                 Dashboard
@@ -50,7 +55,7 @@ const Navbar = () => {
 
         {/* RIGHT: Auth buttons or Profile */}
         <div className="flex items-center gap-3">
-          {!isLoggedIn ? (
+          {!isAuthenticated ? (
             <>
               <Link href="/login" className='text-[13px] font-medium cursor-pointer hover:bg-gray-800 text-gray-250 transition-all px-[9px] py-[6px] rounded-lg hover:text-white'>
                 Log in
@@ -62,7 +67,7 @@ const Navbar = () => {
           ) : (
             <>
               <Link href="/profile">
-                <img src="" alt='Profile' className='rounded-full cursor-pointer' width={25} height={25} />
+                <img src={profilePic} alt='Profile' className='rounded-full cursor-pointer' width={25} height={25} />
               </Link>
               <Link href="/notifications" className='flex items-center'>
                 <NotificationIcon onClick={() => alert("notifications")} />

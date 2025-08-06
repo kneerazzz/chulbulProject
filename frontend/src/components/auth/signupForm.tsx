@@ -16,6 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox"; // Add this import
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useAuth } from '@/store/auth';
+import { api } from '@/lib/api';
+import { useRouter } from 'next/navigation';
 import Link from "next/link";
 
 const FormSchema = z.object({
@@ -31,13 +34,12 @@ const FormSchema = z.object({
   password: z.string().min(6, {
     message: "Password must be at least 6 characters.",
   }),
-  terms: z.literal<boolean>(true, { // Add terms validation
-    errorMap: () => ({ message: "You must accept the terms and conditions" }),
-  }),
 });
 
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const {login} = useAuth()
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -46,26 +48,29 @@ export function AuthForm() {
       fullname: "",
       email: "",
       password: "",
-      terms: false,
     },
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    console.log("signup data", data)
+    console.log(form.formState.errors)
     setIsLoading(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const res = await api.post("/users/register", data)
+      const {user, accessToken, refreshToken} = res.data.data;
 
       toast.success("Account created successfully!", {
-        description: `Welcome, ${data.fullname}! (${data.username})`
+        description: `Welcome, ${user.fullname}! (${user.username})`
       });
+
+      login(user, accessToken, refreshToken)
+      router.push("/")
       
       // Reset form after successful submission
       form.reset();
-    } catch (error) {
-      toast.error("Something went wrong", {
-        description: "Please try again later."
+    } catch (error: any) {
+      toast.error("Signup failed ", {
+        description: error.response?.data?.message || "Please try again later."
       });
     } finally {
       setIsLoading(false);
@@ -127,31 +132,6 @@ export function AuthForm() {
                 <Input placeholder="Create a password" type="password" {...field} />
               </FormControl>
               <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Terms and Conditions Checkbox */}
-        <FormField
-          control={form.control}
-          name="terms"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>
-                  I agree to the
-                  <Link href="/terms" className="font-semibold mt-[1px] ml-[-5px] text-primary hover:underline">
-                    Terms and Conditions
-                  </Link>
-                </FormLabel>
-                <FormMessage />
-              </div>
             </FormItem>
           )}
         />
