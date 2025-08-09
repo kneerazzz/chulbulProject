@@ -99,6 +99,9 @@ const getSkillById = asyncHandler(async(req, res) => {
     const {skillId} = req.params;
 
     const user = req.user;
+    if(!user){
+        throw new ApiError(401, "Auth middleware is broken - user not found")
+    }
 
     if(!skillId){
         throw new ApiError(400, "Skill id not present")

@@ -82,7 +82,8 @@ const registerUser = asyncHandler(async(req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: false,
+        sameSite: "none"
     }
 
     if(!createdUser){
@@ -133,12 +134,10 @@ const loginUser = asyncHandler(async(req, res) => {
     const loggedInUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
-
-
-
     const options = {
         httpOnly: true,
-        secure: true
+        secure: false,
+        sameSite: "none"
     }
 
     return res

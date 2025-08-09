@@ -17,7 +17,7 @@ router.route("/get-all-skills").get(
 router.route("/c/:skillId/get-skill").get(
     verifyJwt,
     getSkillById
-)
+) //its like app.use("/api/v1/skills", skillsRouter)
 
 router.route("/c/:skillId/update-skill").patch(
     verifyJwt,
