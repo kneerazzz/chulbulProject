@@ -40,7 +40,7 @@ const NewSkillPage = () => {
         const response  = await api.post("/skills/create-skill", formData)
         const {_id} = response.data.data
       toast.success("Skill created successfully!");
-      router.push(`/skills/c/${_id}/get-skill`);
+      router.push(`/skills/${_id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "An error occurred");
     } finally {

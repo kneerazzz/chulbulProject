@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Skill } from "@/types";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
+import { cookies } from "next/headers";
 
 export default function SkillsPage() {
   const router = useRouter();
@@ -17,10 +18,26 @@ export default function SkillsPage() {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const response = await api.get("/skills/get-all-skills")
-        const data = response.data.data
+        const cookieStore = await cookies()
+        const accessToken = cookieStore.get("accessToken")?.value
+
+        if(!accessToken){
+            throw new Error("Unauthorised")
+        }
+        const response = await fetch(`http://localhost:4000/api/v1/skills/get-all-skills`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            cache: "no-store"
+        })
+
+        if(!response.ok){
+            console.error("Failed to fetch skill", await response.text())
+            return null
+        }
+        const data = await response.json()
         if (response) {
-          setSkills(data);
+          setSkills(data.data);
         } else {
           throw new Error(data.message || "Failed to fetch skills");
         }
@@ -64,7 +81,7 @@ export default function SkillsPage() {
             <Card 
               key={skill._id} 
               className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => router.push(`/skills/c/${skill._id}/get-skill`)}
+              onClick={() => router.push(`/skills/${skill._id}`)}
             >
               <CardHeader>
                 <CardTitle>{skill.title}</CardTitle>
