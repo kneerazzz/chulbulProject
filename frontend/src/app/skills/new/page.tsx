@@ -14,7 +14,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { title } from "process";
+import axios from "axios";
 
 const NewSkillPage = () => {
   const router = useRouter();
@@ -37,7 +37,7 @@ const NewSkillPage = () => {
     setIsLoading(true);
 
     try {
-        const response  = await api.post("/skills/create-skill", formData)
+        const response  = await axios.post("/api/skills/create-skill", formData)
         const {_id} = response.data.data
       toast.success("Skill created successfully!");
       router.push(`/skills/${_id}`);
