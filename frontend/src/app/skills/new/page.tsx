@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api } from "@/lib/api";
 import {
   Card,
   CardHeader,
@@ -37,7 +36,7 @@ const NewSkillPage = () => {
     setIsLoading(true);
 
     try {
-        const response  = await axios.post("/api/skills/create-skill", formData)
+        const response  = await axios.post("/api/skills/create-skill", formData, {withCredentials: true})
         const {_id} = response.data.data
       toast.success("Skill created successfully!");
       router.push(`/skills/${_id}`);

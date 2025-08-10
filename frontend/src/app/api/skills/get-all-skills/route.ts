@@ -4,13 +4,18 @@ import { requireAuth } from "@/lib/auth";
 export async function GET(req: NextRequest) {
   try {
     const token = await requireAuth();
+    
+    // Get all cookies from the incoming request
+    const cookieHeader = req.cookies.toString();
 
     const backendRes = await fetch("http://localhost:4000/api/v1/skills/get-all-skills", {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        cookie: cookieHeader,
+        // Also forward the authorization if needed
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      cache: "no-store",
+      credentials: 'include' // Important for cookies
     });
 
     if (!backendRes.ok) {
@@ -21,6 +26,7 @@ export async function GET(req: NextRequest) {
     const data = await backendRes.json();
     return NextResponse.json(data);
   } catch (error) {
+    console.error("Error in skills API:", error);
     return new NextResponse("Unauthorized", { status: 401 });
   }
 }

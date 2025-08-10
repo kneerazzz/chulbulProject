@@ -1,21 +1,32 @@
-
-
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import { Skill } from "@/types";
-import { cookies } from "next/headers";
 import axios from "axios";
 
 async function getSkill(skillId: string) {
   try {
-      const response = await axios.get("/api/skills/get-skill", {
-        params: { skillId }
-      })
+    // Add base URL for development
+    const baseUrl = process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:3000' 
+      : '';
+    
+    const response = await axios.get(`${baseUrl}/api/skills/get-skill?skillId=${skillId}`, {
+      withCredentials: true,
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
 
-      return response.data.data as Skill;
+    console.log("Skill data received:", response.data);
+    return response.data.data as Skill;
   } catch (error: any) {
-    console.error("[Frontend] Error details:", error.response?.data || error.message);
+    console.error("[Frontend] Full error details:", {
+      message: error.message,
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     return null;
   }
 }

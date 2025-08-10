@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -17,8 +16,7 @@ export default function SkillsPage() {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const response = await axios.get("/api/skills/get-all-skills");
-        // Assume your API returns array of skills directly in response.data
+        const response = await axios.get("/api/skills/get-all-skills", {withCredentials: true});
         const skills = response.data.data;
         setSkills(skills);
       } catch (error: any) {

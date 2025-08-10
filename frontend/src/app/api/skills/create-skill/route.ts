@@ -6,6 +6,8 @@ export async function POST(req: NextRequest) {
     // Get the token securely from cookie
     const token = await requireAuth();
 
+    const cookieHeader = req.cookies.toString();
+
     // Parse request JSON body
     const body = await req.json();
 
@@ -14,8 +16,10 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        cookie: cookieHeader,
+        ...(token? { Authorization: `Bearer ${token}`}: {})
       },
+      credentials: 'include',
       body: JSON.stringify(body),
     });
 

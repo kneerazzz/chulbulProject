@@ -1,17 +1,18 @@
-import { cookies } from "next/headers"
-
+import { cookies } from "next/headers";
 
 export async function getAcccessToken() {
-    const cookieStore = await cookies()
-    return cookieStore.get("accessToken")?.value || null
+    const cookieStore = await cookies();
+    const allCookies = cookieStore.getAll();
+    console.log("All cookies:", allCookies);
+    return cookieStore.get("accessToken")?.value || null;
 }
 
-
 export async function requireAuth() {
-    const token = getAcccessToken();
+    const token = await getAcccessToken();
+    console.log("Token in requireAuth:", token);
     if(!token){
-        console.log("Unauthorised access")
-        throw new Error("Unauthorised")
+        console.log("Unauthorised access - no token found");
+        throw new Error("Unauthorised");
     }
     return token;
 }
