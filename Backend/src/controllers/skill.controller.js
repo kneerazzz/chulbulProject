@@ -107,15 +107,14 @@ const getSkillById = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Skill id not present")
     }
 
-    const skill = await Skill.findById(skillId)
+    const skill = await Skill.findOne({
+        _id: skillId,
+        createdBy: user._id
+    })
 
 
     if(!skill){
         throw new ApiError(400, "Invalid skill Id - No skills with this id found")
-    }
-
-    if(!skill.createdBy.equals(user._id)){
-        throw new ApiError(403, "You are not authorised to access this skill")
     }
 
     return res

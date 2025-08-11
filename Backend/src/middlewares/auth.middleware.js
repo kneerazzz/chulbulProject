@@ -22,11 +22,6 @@ export const verifyJwt = asyncHandler(async(req, res, next) => {
         }
         req.user = user;
 
-        console.log("Cookies:", req.cookies);
-        console.log("Headers:", req.headers.authorization);
-        console.log("Params:", req.params);
-
-
         next();
         
     } catch (error) {
