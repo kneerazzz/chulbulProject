@@ -2,40 +2,37 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import { Skill } from "@/types";
+import { cookies } from "next/headers";
 import axios from "axios";
-
 async function getSkill(skillId: string) {
   try {
-    // Add base URL for development
-    const baseUrl = process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:3000' 
-      : '';
     
-    const response = await axios.get(`${baseUrl}/api/skills/get-skill?skillId=${skillId}`, {
-      withCredentials: true,
+    // Get cookies from the server request
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.toString();
+    
+    
+    const response = await axios.get(`http://localhost:3000/api/skills/get-skill?skillId=${skillId}`, {
       headers: {
-        'content-type': 'application/json'
-      }
+        'Cookie': cookieHeader,
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true
     });
 
-    console.log("Skill data received:", response.data);
-    return response.data.data as Skill;
+    const data = await response.data;
+    return data.data as Skill;
   } catch (error: any) {
     console.error("[Frontend] Full error details:", {
       message: error.message,
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data
+      stack: error.stack
     });
     return null;
   }
 }
 
-
-
 export default async function SkillDetailPage({ params }: { params: Promise<{ skillId: string }> }) {
-  const { skillId } = await params; // ✅ await it
-  console.log("[Frontend] Route params received:", { skillId });
+  const { skillId } = await params;
 
   const skill = await getSkill(skillId);
   if (!skill) {

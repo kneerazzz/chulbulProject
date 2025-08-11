@@ -4,33 +4,37 @@ import { requireAuth } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
-    // 1. Authentication - identical to working endpoint
+    // 1. Authentication - get the token
     const token = await requireAuth();
-    console.log("Token received:", token ? "Yes" : "No");
     
-    // 2. Get skillId - ensure it exists
-    const skillId = req.nextUrl.searchParams.get("skillId");
+    const url = new URL(req.url);
+    const skillId = url.searchParams.get("skillId");
+    
+    // 2. Validate skillId
     if (!skillId) {
-      console.error("No skillId provided");
       return new NextResponse("Skill ID is required", { status: 400 });
     }
 
-    // 3. Prepare headers - match working endpoint exactly
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
-    };
-    
-    // Include both cookie and Authorization if they exist
-    const cookieHeader = req.headers.get("cookie");
-    if (cookieHeader) headers.cookie = cookieHeader;
-    if (token) headers.Authorization = `Bearer ${token}`;
 
-    console.log("Request headers:", headers);
+    // 3. Get cookies from the original request
+    const cookieHeader = req.headers.get("cookie") || "";
 
-    // 4. Make backend request - identical pattern to working endpoint
+    // 4. Make backend request with proper authentication
     const backendUrl = `http://localhost:4000/api/v1/skills/c/${skillId}/get-skill`;
-    console.log("Calling backend:", backendUrl);
-    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Include cookie header if present
+    if (cookieHeader) {
+      headers.cookie = cookieHeader;
+    }
+
+    // Include Authorization header if token is available
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const backendRes = await fetch(backendUrl, {
       method: "GET",
       headers,
@@ -39,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     if (!backendRes.ok) {
       const errorText = await backendRes.text();
-      console.error("Backend responded with:", errorText);
+      console.error("Backend responded with:", backendRes.status, errorText);
       return new NextResponse(errorText, { status: backendRes.status });
     }
 
@@ -48,6 +52,10 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error("API route error:", error);
-    return new NextResponse("Unauthorized", { status: 401 });
+    // Don't assume it's always unauthorized - return the actual error
+    if (error instanceof Error) {
+      return new NextResponse(error.message, { status: 500 });
+    }
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

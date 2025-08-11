@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 export async function getAcccessToken() {
     const cookieStore = await cookies();
     const allCookies = cookieStore.getAll();
-    console.log("All cookies:", allCookies);
     return cookieStore.get("accessToken")?.value || null;
 }
 
