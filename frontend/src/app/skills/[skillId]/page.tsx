@@ -20,7 +20,7 @@ export default function SkillDetailPage({ params }: { params: Promise<{ skillId:
       const resolvedParams = await params;
       const {skillId} = resolvedParams;
 
-      const response = await axios.delete(`/api/skills/delete-skill?skillId=${skillId}`, {
+      await axios.delete(`/api/skills/delete-skill?skillId=${skillId}`, {
         withCredentials: true
       })
 
@@ -31,6 +31,21 @@ export default function SkillDetailPage({ params }: { params: Promise<{ skillId:
       console.log("error here", error)
       setError("Failed to delete skill")  
     } finally{
+      setLoading(false)
+    }
+  }
+
+  async function updateSkill() {
+    try {
+      const resolvedParams = await params
+      const {skillId} = resolvedParams
+
+      router.push(`/skills/${skillId}/update`)
+      
+    } catch (error) {
+      console.log("Error in updating skill", error)
+      setError("Failed to update skill")
+    } finally {
       setLoading(false)
     }
   }
@@ -94,7 +109,7 @@ export default function SkillDetailPage({ params }: { params: Promise<{ skillId:
           </div>
         </CardContent>
         <CardFooter className="flex justify-end gap-4">
-          <Button variant="outline">Edit</Button>
+          <Button variant="outline" onClick={updateSkill}>Edit</Button>
           <Button variant="destructive" onClick={deleteSkill}>Delete</Button>
         </CardFooter>
       </Card>

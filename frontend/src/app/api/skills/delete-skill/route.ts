@@ -6,7 +6,7 @@ export async function DELETE(req: NextRequest){
         const token = await requireAuth();
     
         if(!token){
-            throw new NextResponse("Token now found-unauthorised request", {status: 401} )
+            throw new NextResponse("Token not found-unauthorised request", {status: 401} )
         }
         const cookieHeader = req.cookies.toString()
         const url = new URL(req.url)
