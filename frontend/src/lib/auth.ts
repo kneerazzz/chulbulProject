@@ -8,7 +8,6 @@ export async function getAcccessToken() {
 
 export async function requireAuth() {
     const token = await getAcccessToken();
-    console.log("Token in requireAuth:", token);
     if(!token){
         console.log("Unauthorised access - no token found");
         throw new Error("Unauthorised");

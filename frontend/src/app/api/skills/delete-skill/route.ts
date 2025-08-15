@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/lib/api";
 import { requireAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,7 +13,7 @@ export async function DELETE(req: NextRequest){
         const url = new URL(req.url)
         const skillId = url.searchParams.get("skillId")
     
-        const backendRes = await fetch(`http://localhost:4000/api/v1/skills/c/${skillId}/delete-skill`, {
+        const backendRes = await fetch(`${API_BASE_URL}/skills/c/${skillId}/delete-skill`, {
             method: "DELETE",
             headers: {
                 cookie: cookieHeader,

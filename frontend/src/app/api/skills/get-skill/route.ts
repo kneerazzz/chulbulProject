@@ -1,6 +1,7 @@
 // app/api/skills/get-skill/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import { API_BASE_URL } from "@/lib/api";
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
     const cookieHeader = req.headers.get("cookie") || "";
 
     // 4. Make backend request with proper authentication
-    const backendUrl = `http://localhost:4000/api/v1/skills/c/${skillId}/get-skill`;
+    const backendUrl = `${API_BASE_URL}/skills/c/${skillId}/get-skill`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };

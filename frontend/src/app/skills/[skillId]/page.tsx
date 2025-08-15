@@ -35,6 +35,21 @@ export default function SkillDetailPage({ params }: { params: Promise<{ skillId:
     }
   }
 
+
+  async function createSkillPlan() {
+    try{
+      const resolvedParams = await params
+      const {skillId} = resolvedParams;
+
+      router.push(`/skills/${skillId}/create-plan`)
+    } catch(error){
+      console.log("Error in create-plan", error)
+      setError("Failed to create-plan")
+    } finally{
+      setLoading(false)
+    }
+  }
+
   async function updateSkill() {
     try {
       const resolvedParams = await params
@@ -61,8 +76,7 @@ export default function SkillDetailPage({ params }: { params: Promise<{ skillId:
         const response = await axios.get(`/api/skills/get-skill?skillId=${skillId}`, {
           withCredentials: true
         });
-        
-        console.log("Skill data received:", response.data);
+
         setSkill(response.data.data);
       } catch (error: any) {
         console.error("[Frontend] Full error details:", {
@@ -108,9 +122,12 @@ export default function SkillDetailPage({ params }: { params: Promise<{ skillId:
             <p className="text-muted-foreground">{skill.description}</p>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end gap-4">
-          <Button variant="outline" onClick={updateSkill}>Edit</Button>
-          <Button variant="destructive" onClick={deleteSkill}>Delete</Button>
+        <CardFooter className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="flex gap-4">
+            <Button variant="outline" onClick={updateSkill}>Edit</Button>
+            <Button variant="destructive" onClick={deleteSkill}>Delete</Button>
+          </div>
+          <Button onClick={createSkillPlan}>Create Plan</Button>
         </CardFooter>
       </Card>
     </div>

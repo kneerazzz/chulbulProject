@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     // Get all cookies from the incoming request
     const cookieHeader = req.cookies.toString();
 
-    const backendRes = await fetch(`${API_BASE_URL}/skills/get-all-skills`, {
+    const backendRes = await fetch(`${API_BASE_URL}/skillplans/get-skill-plans`, {
       method: "GET",
       headers: {
         cookie: cookieHeader,

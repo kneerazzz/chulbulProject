@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/lib/api";
 import { requireAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,7 +17,7 @@ export async function PATCH(req: NextRequest) {
 
         const body = await req.json()
 
-        const backendRes = await fetch(`http://localhost:4000/api/v1/skills/c/${skillId}/update-skill`, {
+        const backendRes = await fetch(`${API_BASE_URL}/skills/c/${skillId}/update-skill`, {
             method: 'PATCH',
             headers: {
                 "Content-Type": "application/json",

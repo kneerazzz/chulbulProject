@@ -7,13 +7,20 @@ export async function POST(req: NextRequest) {
     // Get the token securely from cookie
     const token = await requireAuth();
 
-    const cookieHeader = req.cookies.toString();
+    const cookieHeader = req.headers.get("cookie") || ""
 
+    const url = new URL(req.url)
+
+    const skillId = url.searchParams.get("skillId")
+
+    if(!skillId){
+        return new NextResponse("Skill ID is required", {status: 400})
+    }
     // Parse request JSON body
     const body = await req.json();
 
     // Forward request to backend API
-    const backendRes = await fetch(`${API_BASE_URL}/skills/create-skill`, {
+    const backendRes = await fetch(`${API_BASE_URL}/skillplans/c/${skillId}/create-skill-plan`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
