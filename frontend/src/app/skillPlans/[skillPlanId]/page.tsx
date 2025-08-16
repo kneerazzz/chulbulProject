@@ -39,6 +39,7 @@ export default function SkillPlanDetailPage() {
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
 
+
   useEffect(() => {
     const fetchSkillPlan = async () => {
       try {
@@ -113,9 +114,28 @@ export default function SkillPlanDetailPage() {
     return <div className="text-center py-8">Skill plan not found</div>;
   }
 
-  const completionDate = new Date(skillPlan.createdAt);
-  completionDate.setDate(completionDate.getDate() + skillPlan.durationInDays);
+  function getCompletionEstimate(skillPlan: SkillPlanDetail) {
+      // Simple remaining days calculation
+      const simpleEstimate = new Date();
+      simpleEstimate.setDate(simpleEstimate.getDate() + skillPlan.durationInDays - skillPlan.currentDay);
 
+      // Pace-based calculation if enough data exists
+      if (skillPlan.completedDays.length > 1 && skillPlan.createdAt) {
+        // Convert dates to timestamps (numbers) before subtraction
+        const startDate = new Date(skillPlan.createdAt).getTime(); // returns number
+        const currentDate = new Date().getTime(); // returns number
+        const daysSinceStart = Math.floor((currentDate - startDate) / (86400 * 1000));
+        
+        const completionPace = daysSinceStart / skillPlan.completedDays.length;
+        const paceEstimate = new Date();
+        paceEstimate.setDate(
+          paceEstimate.getDate() + 
+          Math.ceil((skillPlan.durationInDays - skillPlan.currentDay) * completionPace)
+        );
+        return paceEstimate;
+      }
+      return simpleEstimate;
+  }
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-6">
@@ -162,7 +182,7 @@ export default function SkillPlanDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Est. Completion</p>
                     <p className="font-medium">
-                      {format(completionDate, 'MMM dd, yyyy')}
+                      {format(getCompletionEstimate(skillPlan), 'MMM dd, yyyy')}
                     </p>
                   </div>
                 </div>
@@ -229,7 +249,7 @@ export default function SkillPlanDetailPage() {
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Link href={`/skill-plans/${skillPlanId}/edit`}>
+              <Link href={`/skillPlans/${skillPlanId}/edit`}>
                 <Button variant="outline" className="w-full">
                   Edit Plan
                 </Button>
