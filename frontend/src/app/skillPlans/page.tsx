@@ -54,6 +54,17 @@ export default function SkillPlansPage() {
     fetchSkillPlans();
   }, []);
 
+  const calculateCompletionDate = (plan: EnhancedSkillPlan) => {
+    // assume createdAt exists in the response
+    const createdAt = new Date((plan as any).createdAt); 
+    if (isNaN(createdAt.getTime())) return null;
+
+    const completion = new Date(createdAt);
+    completion.setDate(completion.getDate() + plan.durationInDays);
+    return completion;
+  };
+
+
   const filteredPlans = skillPlans.filter(plan => {
     if (filter === "active") return !plan.isCompleted;
     if (filter === "completed") return plan.isCompleted;
@@ -201,8 +212,8 @@ export default function SkillPlansPage() {
                     <div>
                       <p className="text-muted-foreground">Est. Completion</p>
                       <p className="font-medium">
-                        {plan.completionDate && !isNaN(new Date(plan.completionDate).getTime())
-                          ? format(new Date(plan.completionDate), "MMM dd")
+                        {calculateCompletionDate(plan)
+                          ? format(calculateCompletionDate(plan)!, "MMM dd")
                           : "N/A"}
                       </p>
                     </div>
@@ -226,7 +237,7 @@ export default function SkillPlansPage() {
               <CardFooter>
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     router.push(`/skillPlans/${plan._id}`);
