@@ -10,6 +10,7 @@ import { Loader2, ChevronLeft, CalendarDays, Target, Clock, CheckCircle } from "
 import { format } from "date-fns";
 import axios from "axios";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface SkillPlanDetail {
   _id: string;
@@ -25,8 +26,10 @@ interface SkillPlanDetail {
   completedDays: number[];
   isCompleted: boolean;
   createdAt: string;
+  lastDeliveredNote: Date;
   progress: number;
 }
+
 
 export default function SkillPlanDetailPage() {
   const { skillPlanId } = useParams();
@@ -34,6 +37,7 @@ export default function SkillPlanDetailPage() {
   const [skillPlan, setSkillPlan] = useState<SkillPlanDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const fetchSkillPlan = async () => {
@@ -50,6 +54,41 @@ export default function SkillPlanDetailPage() {
 
     fetchSkillPlan();
   }, [skillPlanId]);
+
+
+  const deleteSkillPlan = async() => {
+    try {
+        await axios.delete(`/api/skillPlan/delete-plan?skillPlanId=${skillPlanId}`, {
+            withCredentials: true
+        })
+        toast.success("Skill Plan deleted successfully")
+        router.push("/skillPlans")
+    } catch (error) {
+        console.error("Error deleting Skill Plan ", error)
+        setError("Failed to delete skill plan")
+        toast.error("Error deleting Skill plan")
+    }
+  }
+
+
+  useEffect(() => {
+    const skillPlanProgress = async() => {
+        try{
+            const res = await axios.get(`/api/skillPlan/plan-progress?skillPlanId=${skillPlanId}`, {
+                withCredentials: true
+            })
+            setProgress(res.data.data)
+            return progress;
+        }catch(error){
+            console.log(error);
+            setError("Failed to get the skill Plan progress")        
+        } finally{
+            setLoading(false)
+        }
+    }
+     skillPlanProgress();
+  }, [skillPlanId])
+
 
   if (loading) {
     return (
@@ -141,13 +180,12 @@ export default function SkillPlanDetailPage() {
               <div className="space-y-2 mb-6">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Overall Progress</span>
-                  <span>{skillPlan.progress}%</span>
+                  <span>{progress}%</span>
                 </div>
-                <Progress value={skillPlan.progress} className="h-3" />
+                <Progress value={progress} className="h-3" />
               </div>
             </CardContent>
           </Card>
-
           {/* Daily Progress Grid */}
           <Card>
             <CardHeader>
@@ -199,13 +237,7 @@ export default function SkillPlanDetailPage() {
               <Button 
                 variant="outline" 
                 className="w-full text-red-600 hover:text-red-600"
-                onClick={() => {
-                  if (confirm("Are you sure you want to delete this plan?")) {
-                    axios.delete(`/api/skillPlans/${skillPlanId}`)
-                      .then(() => router.push("/skill-plans"))
-                      .catch(err => setError("Failed to delete plan"));
-                  }
-                }}
+                onClick={deleteSkillPlan}
               >
                 Delete Plan
               </Button>
