@@ -1,0 +1,37 @@
+import { API_BASE_URL } from "@/lib/api";
+import { requireAuth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { json } from "stream/consumers";
+
+
+export async function PATCH(req: NextRequest){
+    try {
+            const token = await requireAuth()
+        
+            const url = new URL(req.url)
+            const skillPlanId = url.searchParams.get("skillPlanId")
+            const cookieHeader = req.headers.get("cookie") || ""
+            const day = url.searchParams.get("day")
+            const body = await req.json();
+        
+            const backendRes = await fetch(`${API_BASE_URL}/notes/c/${skillPlanId}/update-note?day=${day}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    cookie: cookieHeader,
+                    ...(token? {Authorization: `Bearer ${token}`} : {} )
+                },
+                body: JSON.stringify(body),
+                credentials: 'include'
+            })
+            if(!backendRes.ok){
+                const errorText = await backendRes.text()
+                return new NextResponse(errorText, {status: backendRes.status})
+            }
+            const data = backendRes.json()
+            return NextResponse.json(data)
+    } catch (error) {
+        console.error("Error deleting topic", error)
+        return new NextResponse("Unauthorised", {status: 401})
+    }
+}
