@@ -52,7 +52,9 @@ export default function CreateSkillPlanPage() {
         durationInDays
       }
       console.log(formData)
-      const res = await axios.post(`/api/skillPlan/create-plan?skillId=${skillId}`, formData);
+      const res = await axios.post(`/api/skillPlan/create-plan?skillId=${skillId}`, formData, {
+        withCredentials: true
+      });
       console.log(res.data.data)
       const response = res.data.data
       const skillPlanId = response._id;

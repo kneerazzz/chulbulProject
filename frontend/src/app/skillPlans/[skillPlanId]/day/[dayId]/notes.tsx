@@ -12,12 +12,20 @@ interface NotesProps {
   day?: number; // current day, passed from daily topic page
 }
 
+interface Note {
+  _id: string;
+  content: string;
+  day: number;
+  createdAt: string;
+}
+
 export default function Notes({ skillPlanId, day }: NotesProps) {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState<string>("");
   const [savedNote, setSavedNote] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [allNotes, setAllNotes] = useState<Note[]>([]);
 
   // Fetch today’s note
   useEffect(() => {
@@ -27,10 +35,11 @@ export default function Notes({ skillPlanId, day }: NotesProps) {
       try {
         setLoading(true);
         const res = await axios.get(
-          `/api/notes?skillPlanId=${skillPlanId}&day=${day}`
+          `/api/notes/get-note?skillPlanId=${skillPlanId}&day=${day}`,
+          { withCredentials: true }
         );
-        setNote(res.data.data.content || "");
-        setSavedNote(res.data.data.content || "");
+        setNote(res.data.data?.content || "");
+        setSavedNote(res.data.data?.content || "");
       } catch (err: any) {
         setError(err.response?.data?.message || "No note found for today");
       } finally {
@@ -46,11 +55,16 @@ export default function Notes({ skillPlanId, day }: NotesProps) {
     if (!note.trim()) return;
     try {
       setSaving(true);
-      const res = await axios.put(
-        `/api/notes/update?skillPlanId=${skillPlanId}&day=${day}`,
-        { content: note }
+      const content = { content: note };
+      const res = await axios.patch(
+        `/api/notes/update-note?skillPlanId=${skillPlanId}&day=${day}`,
+        content,
+        { withCredentials: true }
       );
       setSavedNote(res.data.data.content);
+
+      // Refresh all notes after update
+      await handleAllNotes();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to save note");
     } finally {
@@ -62,15 +76,34 @@ export default function Notes({ skillPlanId, day }: NotesProps) {
   const handleDelete = async () => {
     try {
       setSaving(true);
-      await axios.delete(`/api/notes/delete?skillPlanId=${skillPlanId}&day=${day}`);
+      await axios.delete(`/api/notes/delete-note?skillPlanId=${skillPlanId}&day=${day}`, {
+        withCredentials: true,
+      });
       setNote("");
       setSavedNote("");
+      await handleAllNotes();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to delete note");
     } finally {
       setSaving(false);
     }
   };
+
+  // Fetch all notes for this plan
+  const handleAllNotes = async () => {
+    try {
+      const res = await axios.get(`/api/notes/get-all-notes?skillPlanId=${skillPlanId}`, {
+        withCredentials: true,
+      });
+      setAllNotes(res.data.data || []);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to fetch all notes");
+    }
+  };
+
+  useEffect(() => {
+    if (skillPlanId) handleAllNotes();
+  }, [skillPlanId]);
 
   if (loading) {
     return (
@@ -90,7 +123,7 @@ export default function Notes({ skillPlanId, day }: NotesProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>📝 Notes</CardTitle>
+        <CardTitle>📝 Notes (Day {day})</CardTitle>
       </CardHeader>
       <CardContent>
         {error ? (
@@ -102,6 +135,23 @@ export default function Notes({ skillPlanId, day }: NotesProps) {
             placeholder="Write your notes for today..."
             className="min-h-[150px]"
           />
+        )}
+
+        {/* Render all notes */}
+        {allNotes.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold mb-2">📚 All Notes</h3>
+            <ul className="space-y-2">
+              {allNotes.map((n) => (
+                <li
+                  key={n._id}
+                  className="p-2 rounded border bg-gray-50 text-sm"
+                >
+                  <span className="font-medium">Day {n.day}:</span> {n.content}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </CardContent>
       <CardFooter className="flex justify-between">
