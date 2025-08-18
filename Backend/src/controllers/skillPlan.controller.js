@@ -8,7 +8,6 @@ import { DailyTopic } from "../models/dailyTopic.model.js";
 import { updateStreak } from "../utils/streak.js";
 import { shouldNotify } from "../utils/shouldNotify.js";
 import { Notification } from "../models/notification.model.js";
-import { Notes } from "../models/notes.model.js";
 
 
 const createSkillPlan = asyncHandler(async(req, res) => {
@@ -119,114 +118,108 @@ const getAllSkillPlans = asyncHandler(async(req, res) => {
 })
 
 const completeCurrentDay = asyncHandler(async(req, res) => {
+    const { skillPlanId } = req.params;
+    const user = req.user;
 
-    const {notesContent} = req.body
+    // Validate input
+    if (!skillPlanId) throw new ApiError(400, "Skill plan ID required");
+    if (!user) throw new ApiError(401, "Unauthorized");
 
+    // Start transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    const {skillPlanId} = req.params;
+    try {
+        const skillPlan = await SkillPlan.findById(skillPlanId).session(session);
+        if (!skillPlan) throw new ApiError(404, "Skill plan not found");
+        if (!skillPlan.user.equals(user._id)) throw new ApiError(403, "Unauthorized");
 
-    if(!skillPlanId) throw new ApiError(400, "Bad request - skill plan not found")
-
-    const user = req.user
-
-    if(!user){
-        throw new ApiError(401,"Auth middleware broken - user not found")
-    }
-
-    const skillPlan = await SkillPlan.findById(skillPlanId)
-
-    if(!skillPlan){
-        throw new ApiError(400, "No skill plan found")
-    }
-
-    const skill = await Skill.findById(skillPlan.skill)
-
-    const today = skillPlan.currentDay
-
-    const todayTopic = await DailyTopic.findOne({
-        skillPlan: skillPlan._id,
-        day: today
-    })
-
-    if(todayTopic?.topic && !skillPlan.completedSubtopics.some(sub => sub.title.toLowerCase() === todayTopic.topic.toLowerCase())){
-        skillPlan.completedSubtopics.push({
-            title: todayTopic.topic,
-            completedAt: new Date()
-        })
-    }
-
-    if(skillPlan.completedDays.includes(today)){
-        throw new ApiError(400, "Day already marked as complete")
-    }
-
-    if(!skillPlan.completedDays.includes(today)){
-        skillPlan.completedDays.push(today)
-    }
-
-    if(today < skillPlan.durationInDays){
-        skillPlan.currentDay += 1;
-    }
-    else if(today>=skillPlan.durationInDays){
-        skillPlan.isCompleted = true
-        if(!user.completedSkills.includes(skill._id)){
-            user.completedSkills.push(skill._id)
+        const today = skillPlan.currentDay;
+        
+        // Validate day completion
+        if (skillPlan.completedDays.includes(today)) {
+            throw new ApiError(400, "Day already completed");
         }
-    }
-    else {
-        throw new ApiError(500, "Unexpected state in day completion")
-    }
 
-    updateStreak(user)
-
-
-    skillPlan.lastDeliveredNote = new Date()
-
-    await Promise.all([
-        skillPlan.save(),
-        user.save({validateBeforeSave: false})
-    ])
-
-
-
-    if(notesContent){
-        await Notes.create({
-            user: user._id,
-            skill: skill._id,
+        // Get today's topic if exists
+        const todayTopic = await DailyTopic.findOne({
             skillPlan: skillPlan._id,
-            content: notesContent,
             day: today
-        })
-    }
+        }).session(session);
 
-    if(user.streak > 1 && shouldNotify(user, "reminder")){
-        await Notification.create({
+        // Update skill plan
+        if (todayTopic?.topic && !skillPlan.completedSubtopics.some(
+            sub => sub.title.toLowerCase() === todayTopic.topic.toLowerCase()
+        )) {
+            skillPlan.completedSubtopics.push({
+                title: todayTopic.topic,
+                completedAt: new Date()
+            });
+        }
+
+        skillPlan.completedDays.push(today);
+        skillPlan.lastDeliveredNote = new Date();
+
+        // Handle plan completion
+        if (today >= skillPlan.durationInDays) {
+            skillPlan.isCompleted = true;
+            if (!user.completedSkills.includes(skillPlan.skill)) {
+                user.completedSkills.push(skillPlan.skill);
+            }
+        } else {
+            skillPlan.currentDay += 1;
+        }
+
+        // Update streak
+        updateStreak(user);
+        // Send notifications (optimized)
+        const notifications = [];
+        if (user.streak > 1 && shouldNotify(user, "reminder")) {
+            notifications.push({
+                user: user._id,
+                message: `You're on a ${user.streak}-day streak. Keep going`,
+                type: "reminder"
+            });
+        }
+
+        if (skillPlan.isCompleted) {
+            const skill = await Skill.findById(skillPlan.skill).session(session);
+            notifications.push({
+                user: user._id,
+                message: `Completed ${skillPlan.durationInDays} day plan for ${skill?.title}`,
+                type: "achievement"
+            });
+        }
+
+        notifications.push({
             user: user._id,
-            message: `You're on a ${user.streak}-day streak. Keep going`,
-            type: "reminder"
-        })
+            message: `Completed day ${today} of your skill plan`,
+            type: "progress"
+        });
+
+        if (notifications.length > 0) {
+            await Notification.insertMany(notifications, { session });
+        }
+
+        // Save all changes
+        await Promise.all([
+            skillPlan.save({ session }),
+            user.save({ validateBeforeSave: false, session })
+        ]);
+
+        await session.commitTransaction();
+
+        return res.status(200).json(
+            new ApiResponse(200, skillPlan, `Day ${today} completed successfully`)
+        );
+
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        session.endSession();
     }
-
-    if(skillPlan.isCompleted === true && shouldNotify(user, "achievement")){
-        await Notification.create({
-            user: user._id,
-            message: `You have completed the entire skill plan of ${skillPlan.durationInDays} on the topic ${skill.title}`,
-            type: "achievement"
-        })
-    }
-
-    await Notification.create({
-        user: user._id,
-        message: `You have completed ${today} of skill ${skill.title}. Keep going`,
-        type: "achievement"
-    })
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, skillPlan, `Skill plan for ${today} is marked as complete`)
-    )
-})
-
+});
 
 const updateSkillPlan = asyncHandler(async(req, res) => {
     const {skillPlanId} = req.params;

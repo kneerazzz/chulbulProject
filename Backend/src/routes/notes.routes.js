@@ -1,9 +1,14 @@
 import { Router } from "express";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
-import { deleteNote, getAllNotes, getNotesByDay, updateNote } from "../controllers/notes.controller.js";
+import { createNote, deleteNote, getAllNotes, getNotesByDay, updateNote } from "../controllers/notes.controller.js";
 
 const router = Router()
 
+
+router.route("/c/:skillPlanId/create-note").post(
+    verifyJwt,
+    createNote
+)
 router.route("/c/:skillPlanId/get-note").get(
     verifyJwt,
     getNotesByDay

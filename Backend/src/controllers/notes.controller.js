@@ -1,8 +1,55 @@
 import { Notes } from "../models/notes.model.js";
+import { SkillPlan } from "../models/skillPlan.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+
+
+const createNote = asyncHandler(async(req, res) => {
+    const {day} = req.query
+    const {skillPlanId} = req.params
+    const {notesContent} = req.body;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+
+    if(!day || !skillPlanId){
+        throw new ApiError("Day or skillPlanId not found", 400)
+    }
+    const user = req.user
+
+    if(!user){
+        throw new ApiError("Unauthorised - can't find user")
+    }
+
+    const skillPlan = await SkillPlan.findOne({
+        user: user._id,
+        _id: skillPlanId
+    })
+
+    let createdNote;
+
+    if(notesContent){
+        createdNote = await Notes.create({
+            user: user._id,
+            skill: skillPlan.skill,
+            skillPlan: skillPlanId,
+            content: notesContent,
+            day: skillPlan.currentDay
+        })
+    }
+    if(!createdNote){
+        throw new ApiError("Error creating note", 500)
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, createdNote, "Note has been created successfully")
+    )  
+})
 
 const getNotesByDay = asyncHandler(async(req, res) => {
     const {day} = req.query;
@@ -153,6 +200,7 @@ const deleteNote = asyncHandler(async(req, res) => {
 
 
 export {
+    createNote,
     getNotesByDay,
     getAllNotes,
     updateNote,

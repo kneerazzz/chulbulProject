@@ -6,7 +6,7 @@ import { geminiLimiter } from '../middlewares/geminiLimiter.js';
 const router = Router()
 
 
-router.route("/c/:skillPlanId/create-topic").post(
+router.route("/c/:skillPlanId/create-topic").get(
     verifyJwt,
     geminiLimiter,
     createDailyTopic
@@ -28,7 +28,7 @@ router.route("/c/:skillPlanId/get-today-topic").get(
     getTodayTopic
 )
 
-router.route("/c/:skillPlanId/get-all-topic").get(
+router.route("/c/:skillPlanId/get-all-topics").get(
     verifyJwt,
     getAllTopicsForPlan
 )
