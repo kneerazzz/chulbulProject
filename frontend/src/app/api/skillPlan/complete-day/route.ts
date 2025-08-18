@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest) {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
-                    cookie: cookieHeader,
+                    Cookie: cookieHeader,
                     ...(token ? {Authorization: `Bearer ${token}`} : {})
                 },
                 body: JSON.stringify(body),
@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest) {
                 const errorText = await backendRes.text();
                 return new NextResponse(errorText, {status: backendRes.status})
             }
-            const data =  await backendRes.json()
+            const data = await backendRes.json()
 
             return NextResponse.json(data)
     } catch (error) {

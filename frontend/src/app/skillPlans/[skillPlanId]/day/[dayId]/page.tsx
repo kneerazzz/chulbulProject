@@ -1,96 +1,130 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Suspense, useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import Loading from './loading';
+import { toast } from 'sonner';
 
-import TopicContent from "./topic-content";
-import Notes from "./notes";
-import SessionActions from "./actions";
+// Components
+import DailyTopic from './topic-content';
+import Notes from './notes';
+import Actions from './actions';
+import axios from 'axios';
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { DailyTopic } from "@/types";
-import axios from "axios";
+interface SkillPlanDetail {
+  _id: string;
+  skill: {
+    _id: string;
+    title: string;
+    category: string;
+    description: string;
+  };
+  targetLevel: string;
+  durationInDays: number;
+  currentDay: number;
+  completedDays: number[];
+  isCompleted: boolean;
+  createdAt: string;
+  lastDeliveredNote: Date;
+  progress: number;
+}
+
 
 export default function DailySessionPage() {
-  const { skillPlanId, dayString } = useParams<{ skillPlanId: string; dayString: string }>();
-  const day = Number(dayString)
-  const [topic, setTopic] = useState<DailyTopic | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const params = useParams();
+  const router = useRouter();
+  const skillPlanId = params.skillPlanId as string;
+  const day = Number(params.dayId);
+  const [notesContent, setNotesContent] = useState('');
+  const [skillPlan, setSkillPlan] = useState<SkillPlanDetail | null>(null);
+  
+  const handleCompleteSuccess = () => {
+    toast.success(`Day ${day} marked as complete!`);
+    router.push(`/skillPlans/${skillPlanId}`);
+  };
+
 
   useEffect(() => {
-    if (!skillPlanId || !day) return;
-
-    const fetchTopic = async () => {
+    const fetchSkillPlan = async () => {
       try {
-        setLoading(true);
-        setError(null);
-
-        const res = await axios.get(`/api/daily-topic/get-topic?skillPlanId=${skillPlanId}&day=${day}`, {
-            withCredentials: true
-        })
-        if(!res){
-            console.error("error getting response from the proxy route")
-        }
-        const topic = res.data.data;
-        setTopic(topic); // assuming your API returns { data: { ...dailyTopic } }
-      } catch (err: any) {
-        setError(err.message || "Failed to load daily topic");
-      } finally {
-        setLoading(false);
+        const res = await axios.get(`/api/skillPlan/get-plan?skillPlanId=${skillPlanId}`);
+        setSkillPlan(res.data.data);
+      } catch (err) {
+        console.error("Failed to fetch skill plan:", err);
       }
     };
 
-    fetchTopic();
-  }, [skillPlanId, day]);
+    fetchSkillPlan();
+  }, [skillPlanId]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">Loading daily session...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 text-red-500 font-medium">
-        ⚠️ {error}
-      </div>
-    );
-  }
-
-  if (!topic) {
-    return (
-      <div className="p-4 text-muted-foreground">
-        No topic found for this day.
-      </div>
-    );
-  }
+  const currentDay = skillPlan?.currentDay || day
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 p-4">
-      {/* Topic Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Day {day}: {topic.topic}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TopicContent topic={topic} />
-        </CardContent>
-      </Card>
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      <Suspense fallback={<Loading />}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main content */}
+          <div className="lg:col-span-2 space-y-6">
+            <Suspense fallback={
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    <Skeleton className="h-6 w-40" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+              </Card>
+            }>
+              <DailyTopic skillPlanId={skillPlanId} day={day} />
+            </Suspense>
 
-      {/* Notes Section */}
-      <Notes skillPlanId={skillPlanId} day={day} />
+            <Suspense fallback={
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    <Skeleton className="h-5 w-24" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+              </Card>
+            }>
+              <Notes 
+                skillPlanId={skillPlanId} 
+                day={day}
+                onNotesChange={setNotesContent}
+                currentDay={currentDay}
+              />
+            </Suspense>
+          </div>
 
-      {/* Session Actions */}
-      <SessionActions skillPlanId={skillPlanId} day={day} onUpdate={(updatedtopic) => {
-        console.log("Updated topic: ", updatedtopic)
-      }} />
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <Card>
+              <Suspense fallback={
+                <CardContent className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </CardContent>
+              }>
+                <Actions 
+                  skillPlanId={skillPlanId} 
+                  day={day}
+                  notesContent={notesContent}
+                  onComplete={handleCompleteSuccess}
+                />
+              </Suspense>
+            </Card>
+          </div>
+        </div>
+      </Suspense>
     </div>
   );
 }

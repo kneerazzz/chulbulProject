@@ -1,186 +1,198 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Trash2, Save } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Loader2, Edit, Save, Trash2 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { toast } from 'sonner';
+import axios from 'axios';
 
-interface NotesProps {
+export default function Notes({
+  skillPlanId,
+  day,
+  currentDay, // 👈 add this prop so we can check
+  onNotesChange,
+}: {
   skillPlanId: string;
-  day?: number; // current day, passed from daily topic page
-}
-
-interface Note {
-  _id: string;
-  content: string;
   day: number;
-  createdAt: string;
-}
+  currentDay: number;
+  onNotesChange?: (content: string) => void;
+}) {
+  const [content, setContent] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-export default function Notes({ skillPlanId, day }: NotesProps) {
-  const [loading, setLoading] = useState(true);
-  const [note, setNote] = useState<string>("");
-  const [savedNote, setSavedNote] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [allNotes, setAllNotes] = useState<Note[]>([]);
-
-  // Fetch today’s note
+  // Fetch notes on mount
   useEffect(() => {
-    const fetchNote = async () => {
-      if (!skillPlanId || !day) return;
-
+    const fetchNotes = async () => {
       try {
-        setLoading(true);
+        setIsLoading(true);
         const res = await axios.get(
-          `/api/notes/get-note?skillPlanId=${skillPlanId}&day=${day}`,
+          `/api/notes/get-note?skillPlanId=${skillPlanId}&day=${day}`, 
           { withCredentials: true }
         );
-        setNote(res.data.data?.content || "");
-        setSavedNote(res.data.data?.content || "");
-      } catch (err: any) {
-        setError(err.response?.data?.message || "No note found for today");
+        
+        if (res) {
+          const data = res.data.data;
+          setContent(data?.content || '');
+          if (onNotesChange) onNotesChange(data?.content || '');
+        }
+      } catch (error) {
+        toast.error("Failed to load notes");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchNote();
+    fetchNotes();
   }, [skillPlanId, day]);
 
-  // Save/update note
+  const handleContentChange = (value: string) => {
+    setContent(value);
+    if (onNotesChange) onNotesChange(value);
+  };
+
   const handleSave = async () => {
-    if (!note.trim()) return;
     try {
-      setSaving(true);
-      const content = { content: note };
+      setIsSaving(true);
       const res = await axios.patch(
-        `/api/notes/update-note?skillPlanId=${skillPlanId}&day=${day}`,
-        content,
+        `/api/notes/update-note?skillPlanId=${skillPlanId}&day=${day}`, 
+        {content}, 
         { withCredentials: true }
       );
-      setSavedNote(res.data.data.content);
 
-      // Refresh all notes after update
-      await handleAllNotes();
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to save note");
+      if (res.status === 200) {
+        toast.success("Notes saved successfully");
+        setIsEditing(false);
+      }
+    } catch (error) {
+      toast.error("Failed to save notes");
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
-  // Delete note
   const handleDelete = async () => {
     try {
-      setSaving(true);
-      await axios.delete(`/api/notes/delete-note?skillPlanId=${skillPlanId}&day=${day}`, {
-        withCredentials: true,
-      });
-      setNote("");
-      setSavedNote("");
-      await handleAllNotes();
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to delete note");
+      setIsDeleting(true);
+      const res = await axios.delete(
+        `/api/notes/delete-note?skillPlanId=${skillPlanId}&day=${day}`,
+        { withCredentials: true }
+      );
+
+      if (res.status === 200) {
+        toast.success("Note deleted successfully");
+        handleContentChange('');
+        setIsEditing(false);
+      }
+    } catch (error) {
+      toast.error("Failed to delete note");
     } finally {
-      setSaving(false);
+      setIsDeleting(false);
     }
   };
 
-  // Fetch all notes for this plan
-  const handleAllNotes = async () => {
-    try {
-      const res = await axios.get(`/api/notes/get-all-notes?skillPlanId=${skillPlanId}`, {
-        withCredentials: true,
-      });
-      setAllNotes(res.data.data || []);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to fetch all notes");
-    }
-  };
-
-  useEffect(() => {
-    if (skillPlanId) handleAllNotes();
-  }, [skillPlanId]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>📝 Notes</CardTitle>
+          <CardTitle>Notes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center items-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+          <div className="h-[200px] flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         </CardContent>
       </Card>
     );
   }
 
+  // ✅ permission checks
+  const isCurrentDay = day === currentDay;
+  const isPastDay = day < currentDay;
+  const isFutureDay = day > currentDay;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>📝 Notes (Day {day})</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Notes</CardTitle>
+
+          {/* Only allow editing button for current or past days */}
+          {(isCurrentDay || isPastDay) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsEditing(!isEditing)}
+              disabled={isSaving || isDeleting}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
-        {error ? (
-          <p className="text-sm text-red-600">{error}</p>
-        ) : (
-          <Textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Write your notes for today..."
-            className="min-h-[150px]"
-          />
-        )}
-
-        {/* Render all notes */}
-        {allNotes.length > 0 && (
-          <div className="mt-4">
-            <h3 className="text-sm font-semibold mb-2">📚 All Notes</h3>
-            <ul className="space-y-2">
-              {allNotes.map((n) => (
-                <li
-                  key={n._id}
-                  className="p-2 rounded border bg-gray-50 text-sm"
-                >
-                  <span className="font-medium">Day {n.day}:</span> {n.content}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <Textarea
+          value={content}
+          onChange={(e) => handleContentChange(e.target.value)}
+          className="min-h-[200px]"
+          placeholder={
+            isFutureDay
+              ? "You can't write notes for a future day."
+              : "Write your notes here..."
+          }
+          disabled={isFutureDay || !isEditing}
+          onFocus={() => {
+            if (!isFutureDay) setIsEditing(true);
+          }}
+        />
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button
-          variant="outline"
-          onClick={handleSave}
-          disabled={saving || note === savedNote}
-        >
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <Save className="h-4 w-4 mr-2" />
-          )}
-          Save
-        </Button>
 
-        <Button
-          variant="destructive"
-          onClick={handleDelete}
-          disabled={saving || !savedNote}
-        >
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <Trash2 className="h-4 w-4 mr-2" />
-          )}
-          Delete
-        </Button>
-      </CardFooter>
+      {/* Footer actions */}
+      {isEditing && (
+        <CardFooter className="flex justify-between">
+          {day === currentDay ? (
+            // Current day → Only Create button on right
+            <div className="flex justify-end w-full">
+              <Button onClick={() => toast.success("Note is created successfully")} disabled={isSaving || isDeleting}>
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Create Note
+              </Button>
+            </div>
+          ) : day < currentDay ? (
+            // Past day → Delete left, Update right
+            <>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isSaving || isDeleting || !content}
+              >
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4 mr-2" />
+                )}
+                Delete
+              </Button>
+              <Button onClick={handleSave} disabled={isSaving || isDeleting}>
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Update
+              </Button>
+            </>
+          ) : null}
+        </CardFooter>
+      )}
     </Card>
   );
 }

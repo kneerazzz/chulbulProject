@@ -114,6 +114,21 @@ export default function SkillPlanDetailPage() {
     return <div className="text-center py-8">Skill plan not found</div>;
   }
 
+  const createTopic = async(skillPlan: SkillPlanDetail) => {
+    try {
+      const res = await axios.get(`/api/dailyTopic/create-topic?skillPlanId=${skillPlanId}&day=${skillPlan.currentDay}`, {
+        withCredentials: true
+      })
+      toast.success("Today's topic is generated successfully")
+      router.push(`/skillPlans/${skillPlanId}/day/${skillPlan.currentDay}`)
+    } catch (error) {
+      console.error("Error creating topic", error)
+      toast.error("Error creating today's topic")
+    } finally{
+      setLoading(false)
+    }
+  }
+
   function getCompletionEstimate(skillPlan: SkillPlanDetail) {
       // Simple remaining days calculation
       const simpleEstimate = new Date();
@@ -271,14 +286,9 @@ export default function SkillPlanDetailPage() {
                 <CardTitle>Today's Session</CardTitle>
               </CardHeader>
               <CardContent>
-                <Link 
-                  href={`/skill-plans/${skillPlanId}/daily/${skillPlan.currentDay}`}
-                  className="w-full"
-                >
-                  <Button className="w-full">
-                    Go to Day {skillPlan.currentDay}
-                  </Button>
-                </Link>
+                <Button className="w-full" onClick={() => createTopic(skillPlan)} disabled={loading}>
+                  Go to Day {skillPlan.currentDay}
+                </Button>
               </CardContent>
             </Card>
           )}

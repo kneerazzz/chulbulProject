@@ -1,74 +1,76 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import axios from "axios";
-import { Button } from "@/components/ui/button";
-import { RotateCcw, Trash2 } from "lucide-react";
-import { Loader2 } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Loader2, CheckCircle, ChevronLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import axios from 'axios';
 
-interface ActionsProps {
+export default function SessionActions({
+  skillPlanId,
+  day,
+  notesContent,
+  onComplete,
+}: {
   skillPlanId: string;
   day: number;
-  onUpdate: (topic: any | null) => void; // callback to parent
-}
+  notesContent: string;
+  onComplete?: () => void;
+}) {
+  const router = useRouter();
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
-export default function Actions({ skillPlanId, day, onUpdate }: ActionsProps) {
-  const [loading, setLoading] = useState<"regen" | "delete" | null>(null);
-
-  const handleRegenerate = async () => {
+  const handleCompleteDay = async () => {
     try {
-      setLoading("regen");
-      const res = await axios.put(
-        `/api/daily-topics/regenerate?skillPlanId=${skillPlanId}&day=${day}`
+      setIsCompleting(true);
+      
+      const res = await axios.patch(
+        `/api/skillPlan/complete-day?skillPlanId=${skillPlanId}`,
+        { notesContent },
+        { withCredentials: true }
       );
-      onUpdate(res.data.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(null);
-    }
-  };
 
-  const handleDelete = async () => {
-    try {
-      setLoading("delete");
-      await axios.delete(
-        `/api/daily-topics/delete?skillPlanId=${skillPlanId}&day=${day}`
-      );
-      onUpdate(null);
-    } catch (err) {
-      console.error(err);
+      if (res.status === 200) {
+        toast.success(`Day ${day} completed successfully!`);
+        if (onComplete) onComplete();
+        setIsNavigating(true);
+        router.push(`/skillPlans/${skillPlanId}`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to complete day');
     } finally {
-      setLoading(null);
+      setIsCompleting(false);
     }
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex justify-between items-center gap-4">
       <Button
         variant="outline"
-        onClick={handleRegenerate}
-        disabled={loading !== null}
+        onClick={() => router.push(`/skillPlans/${skillPlanId}`)}
+        disabled={isCompleting || isNavigating}
       >
-        {loading === "regen" ? (
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        {isNavigating ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
-          <RotateCcw className="h-4 w-4 mr-2" />
+          <ChevronLeft className="mr-2 h-4 w-4" />
         )}
-        Regenerate
+        Back to Plan
       </Button>
 
       <Button
-        variant="destructive"
-        onClick={handleDelete}
-        disabled={loading !== null}
+        onClick={handleCompleteDay}
+        disabled={isCompleting || isNavigating}
+        className="bg-green-600 hover:bg-green-700"
       >
-        {loading === "delete" ? (
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        {isCompleting ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
-          <Trash2 className="h-4 w-4 mr-2" />
+          <CheckCircle className="mr-2 h-4 w-4" />
         )}
-        Delete
+        Mark Day as Complete
       </Button>
     </div>
   );

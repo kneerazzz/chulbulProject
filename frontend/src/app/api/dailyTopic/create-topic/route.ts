@@ -15,7 +15,7 @@ export async function GET(req: NextRequest){
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                    cookie: cookieHeader,
+                    Cookie: cookieHeader,
                     ...(token ? {Authorization: `Bearer ${token}`} : {})
                 },
                 credentials: 'include'
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest){
                 const errorText = await backendRes.text()
                 return new NextResponse(errorText, {status: backendRes.status})
             }
-            const data = backendRes.json()
+            const data = await backendRes.json()
             return NextResponse.json(data)
     } catch (error) {
         console.error("Error in creating-topic", error)

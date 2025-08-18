@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { json } from "stream/consumers";
 
 
-export async function PATCH(req: NextRequest){
+export async function POST(req: NextRequest){
     try {
             const token = await requireAuth()
         
@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest){
             const day = url.searchParams.get("day")
             const body = await req.json();
         
-            const backendRes = await fetch(`${API_BASE_URL}/notes/c/${skillPlanId}/update-note?day=${day}`, {
+            const backendRes = await fetch(`${API_BASE_URL}/notes/c/${skillPlanId}/create-note?day=${day}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
