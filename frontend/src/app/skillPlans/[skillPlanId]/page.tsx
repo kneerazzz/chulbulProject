@@ -236,7 +236,7 @@ export default function SkillPlanDetailPage() {
                   return (
                     <Link 
                       key={day} 
-                      href={`/skill-plans/${skillPlanId}/daily/${day}`}
+                      href={`/skillPlans/${skillPlanId}/day/${day}`}
                       className="flex flex-col items-center gap-1"
                     >
                       <div

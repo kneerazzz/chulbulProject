@@ -11,7 +11,7 @@ import axios from 'axios';
 export default function Notes({
   skillPlanId,
   day,
-  currentDay, // 👈 add this prop so we can check
+  currentDay,
   onNotesChange,
 }: {
   skillPlanId: string;
@@ -24,8 +24,11 @@ export default function Notes({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // --- inside useEffect
 
-  // Fetch notes on mount
+
+  
+
   useEffect(() => {
     const fetchNotes = async () => {
       try {
@@ -34,21 +37,24 @@ export default function Notes({
           `/api/notes/get-note?skillPlanId=${skillPlanId}&day=${day}`, 
           { withCredentials: true }
         );
-        
-        if (res) {
-          const data = res.data.data;
-          setContent(data?.content || '');
-          if (onNotesChange) onNotesChange(data?.content || '');
+
+        const data = res.data?.data;
+        if (data) {
+          setContent(data.content || '');
+          if (onNotesChange) onNotesChange(data.content || '');
+        } else {
+          // No note exists for this day
+          setContent('');
         }
       } catch (error) {
-        toast.error("Failed to load notes");
+        toast.message("No note available for the day"); // only real error
       } finally {
         setIsLoading(false);
       }
     };
+    fetchNotes()
+  }, [skillPlanId, day])
 
-    fetchNotes();
-  }, [skillPlanId, day]);
 
   const handleContentChange = (value: string) => {
     setContent(value);
@@ -59,17 +65,38 @@ export default function Notes({
     try {
       setIsSaving(true);
       const res = await axios.patch(
-        `/api/notes/update-note?skillPlanId=${skillPlanId}&day=${day}`, 
-        {content}, 
+        `/api/notes/update-note?skillPlanId=${skillPlanId}&day=${day}`,
+        { content },
         { withCredentials: true }
       );
 
       if (res.status === 200) {
-        toast.success("Notes saved successfully");
+        toast.success("Notes updated successfully");
         setIsEditing(false);
       }
-    } catch (error) {
-      toast.error("Failed to save notes");
+    } catch {
+      toast.error("Failed to update notes");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    try {
+      setIsSaving(true);
+      const res = await axios.post(
+        `/api/notes/create-note?skillPlanId=${skillPlanId}&day=${day}`,
+        { content },
+        { withCredentials: true }
+      );
+
+      if (res.status === 200) {
+        toast.success("Note created successfully");
+        toast.warning("Mark the day as complete to finalize the note");
+        setIsEditing(false);
+      }
+    } catch {
+      toast.error("Failed to create note");
     } finally {
       setIsSaving(false);
     }
@@ -88,7 +115,7 @@ export default function Notes({
         handleContentChange('');
         setIsEditing(false);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete note");
     } finally {
       setIsDeleting(false);
@@ -120,8 +147,6 @@ export default function Notes({
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Notes</CardTitle>
-
-          {/* Only allow editing button for current or past days */}
           {(isCurrentDay || isPastDay) && (
             <Button
               variant="ghost"
@@ -134,30 +159,37 @@ export default function Notes({
           )}
         </div>
       </CardHeader>
+
       <CardContent>
-        <Textarea
-          value={content}
-          onChange={(e) => handleContentChange(e.target.value)}
-          className="min-h-[200px]"
-          placeholder={
-            isFutureDay
-              ? "You can't write notes for a future day."
-              : "Write your notes here..."
-          }
-          disabled={isFutureDay || !isEditing}
-          onFocus={() => {
-            if (!isFutureDay) setIsEditing(true);
-          }}
-        />
+        {content === '' && !isEditing && !isFutureDay ? (
+          <p className="text-muted-foreground italic">
+            No note available for this day.
+          </p>
+        ) : (
+          <Textarea
+            value={content}
+            onChange={(e) => handleContentChange(e.target.value)}
+            className="min-h-[200px]"
+            placeholder={
+              isFutureDay
+                ? "You can't write notes for a future day."
+                : "Write your notes here..."
+            }
+            disabled={isFutureDay || !isEditing}
+            onFocus={() => {
+              if (!isFutureDay) setIsEditing(true);
+            }}
+          />
+        )}
       </CardContent>
 
-      {/* Footer actions */}
+
       {isEditing && (
         <CardFooter className="flex justify-between">
-          {day === currentDay ? (
-            // Current day → Only Create button on right
+          {isCurrentDay ? (
+            // 👉 Current day → only Create button (right side)
             <div className="flex justify-end w-full">
-              <Button onClick={() => toast.success("Note is created successfully")} disabled={isSaving || isDeleting}>
+              <Button onClick={handleCreate} disabled={isSaving || isDeleting || !content}>
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -166,8 +198,8 @@ export default function Notes({
                 Create Note
               </Button>
             </div>
-          ) : day < currentDay ? (
-            // Past day → Delete left, Update right
+          ) : isPastDay ? (
+            // 👉 Past day → Delete (left) + Update (right)
             <>
               <Button
                 variant="destructive"
@@ -181,7 +213,7 @@ export default function Notes({
                 )}
                 Delete
               </Button>
-              <Button onClick={handleSave} disabled={isSaving || isDeleting}>
+              <Button onClick={handleSave} disabled={isSaving || isDeleting || !content}>
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (

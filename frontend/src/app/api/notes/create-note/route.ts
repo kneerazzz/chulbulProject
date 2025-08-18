@@ -15,7 +15,7 @@ export async function POST(req: NextRequest){
             const body = await req.json();
         
             const backendRes = await fetch(`${API_BASE_URL}/notes/c/${skillPlanId}/create-note?day=${day}`, {
-                method: "PATCH",
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     cookie: cookieHeader,
