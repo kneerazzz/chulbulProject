@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -6,9 +6,11 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Flame, Star, Trophy, Mail } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { useUser } from "@/hooks/useUser"
+import { useRouter } from "next/navigation"
 
 const ProfilePage = () => {
   const { data: user, isLoading, isError } = useUser()
+  const router = useRouter()
 
   if (isLoading) return <p>Loading...</p>
   if (isError) return <p>Failed to load profile</p>
@@ -19,11 +21,11 @@ const ProfilePage = () => {
       <Card className="col-span-2">
         <CardHeader className="flex items-center gap-4">
           <Avatar className="w-20 h-20 rounded-xl">
-            <AvatarImage src={user.avatar || "/default-avatar.png"} />
-            <AvatarFallback>{user?.name?.[0] ?? "U"}</AvatarFallback>
+            <AvatarImage src={user.profilePic || "/default-avatar.png"} />
+            <AvatarFallback>{user?.fullname?.[0] ?? "U"}</AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-xl font-bold">{user.name}</h2>
+            <h2 className="text-xl font-bold">{user.fullname}</h2>
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Mail className="h-4 w-4" /> {user.email}
             </p>
@@ -34,12 +36,18 @@ const ProfilePage = () => {
             {user.bio || "No bio added yet..."}
           </p>
         </CardContent>
-        <CardFooter className="flex justify-end">
-          <Button>Edit Profile</Button>
+        <CardFooter className="flex gap-3">
+          <Button className="cursor-pointer" onClick={() => router.push("/settings/profile")}>Edit Profile</Button>
+          <Button className="cursor-pointer" onClick={() => router.push("/settings/password")} variant="outline">
+            Change Password
+          </Button>
+          <Button className="cursor-pointer" onClick={() => router.push("/settings/profile-pic")} variant="secondary">
+            Change Profile Pic
+          </Button>
         </CardFooter>
       </Card>
 
-      {/* Level & Skill Progression */}
+      {/* Progression */}
       <Card>
         <CardHeader>
           <CardTitle>Progression</CardTitle>
@@ -49,17 +57,12 @@ const ProfilePage = () => {
             Level {user.level} • {user.skillLevel}
           </p>
           <Progress
-            value={(user.completedSkills / user.totalSkills) * 100}
+            value={(user.completedSkills?.length / user.totalSkills) * 100}
             className="mt-2"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            {user.completedSkills}/{user.totalSkills} skills completed
+            {user.completedSkills?.length ?? 0} skills completed
           </p>
-          {user.currentXP !== undefined && user.nextLevelXP !== undefined && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {user.currentXP} / {user.nextLevelXP} XP to next level
-            </p>
-          )}
         </CardContent>
       </Card>
 
@@ -78,12 +81,12 @@ const ProfilePage = () => {
             {user.longestStreak ?? 0} days
           </p>
           <p className="text-xs text-muted-foreground">
-            Joined {user.joinDate ? new Date(user.joinDate).toDateString() : "recently"}
+            Joined {user.createdAt ? new Date(user.createdAt).toDateString() : "recently"}
           </p>
         </CardContent>
       </Card>
 
-      {/* Badges / Achievements */}
+      {/* Achievements */}
       <Card className="col-span-2">
         <CardHeader>
           <CardTitle>Achievements</CardTitle>

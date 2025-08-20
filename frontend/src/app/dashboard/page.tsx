@@ -29,10 +29,17 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import axios from 'axios'
+import SettingsDrawer from './settings'
+import NotificationDrawer from './notifications'
+import { useRouter } from "next/navigation"
+
 
 const Dashboard = () => {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -109,14 +116,14 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon">
-              <Bell className="h-5 w-5" />
+            <Button variant="outline" className='cursor-pointer' size="icon">
+              <Bell className="h-5 w-5" onClick={() => setNotificationsOpen(true)} />
             </Button>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" className='cursor-pointer' onClick={() => setSettingsOpen(true)}>
               <Settings className="h-5 w-5" />
             </Button>
-            <Button className="gap-2">
-              <PlusCircle className="h-4 w-4" /> New Plan
+            <Button className="gap-2 cursor-pointer" onClick={() => router.push("/skills/create-skill") }>
+              <PlusCircle className="h-4 w-4" /> New Skill
             </Button>
           </div>
         </header>
@@ -287,6 +294,8 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
+        <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <NotificationDrawer open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       </div>
     </div>
   )
