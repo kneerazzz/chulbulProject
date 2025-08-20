@@ -7,7 +7,6 @@ import { json } from "stream/consumers";
 export async function POST(req: NextRequest){
     try {
             const token = await requireAuth()
-        
             const url = new URL(req.url)
             const skillPlanId = url.searchParams.get("skillPlanId")
             const cookieHeader = req.headers.get("cookie") || ""

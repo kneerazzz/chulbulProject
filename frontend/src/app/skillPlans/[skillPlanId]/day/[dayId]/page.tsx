@@ -1,9 +1,11 @@
-'use client';
+"use client";
 
 import { Suspense, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
 import Loading from './loading';
 import { toast } from 'sonner';
 
@@ -31,7 +33,6 @@ interface SkillPlanDetail {
   progress: number;
 }
 
-
 export default function DailySessionPage() {
   const params = useParams();
   const router = useRouter();
@@ -39,30 +40,72 @@ export default function DailySessionPage() {
   const day = Number(params.dayId);
   const [notesContent, setNotesContent] = useState('');
   const [skillPlan, setSkillPlan] = useState<SkillPlanDetail | null>(null);
+  const [loading, setLoading] = useState(true);
   
   const handleCompleteSuccess = () => {
     toast.success(`Day ${day} marked as complete!`);
     router.push(`/skillPlans/${skillPlanId}`);
   };
 
-
   useEffect(() => {
     const fetchSkillPlan = async () => {
       try {
+        setLoading(true);
         const res = await axios.get(`/api/skillPlan/get-plan?skillPlanId=${skillPlanId}`);
         setSkillPlan(res.data.data);
       } catch (err) {
         console.error("Failed to fetch skill plan:", err);
+        toast.error("Failed to load skill plan details");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchSkillPlan();
   }, [skillPlanId]);
 
-  const currentDay = skillPlan?.currentDay || day
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (!skillPlan) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <p className="text-red-500 mb-4">Skill plan not found</p>
+        <Button onClick={() => router.push('/skillPlans')}>
+          Back to All Plans
+        </Button>
+      </div>
+    );
+  }
+
+  const currentDay = skillPlan.currentDay;
+  const isPastDay = day < currentDay;
+  const isToday = day === currentDay;
+  const isFutureDay = day > currentDay;
+  const isCompletedDay = skillPlan.completedDays.includes(day);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
+      {/* Header with Back Button */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => router.push(`/skillPlans/${skillPlanId}`)}
+          className="gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Plan
+        </Button>
+        
+        {/* Status Badge */}
+        <div className="text-sm text-muted-foreground">
+          {isFutureDay && "🔒 Upcoming Day"}
+          {isToday && "🎯 Current Day"}
+          {(isPastDay || isCompletedDay) && "✅ Completed Day"}
+        </div>
+      </div>
+
       <Suspense fallback={<Loading />}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
@@ -81,7 +124,7 @@ export default function DailySessionPage() {
                 </CardContent>
               </Card>
             }>
-              <DailyTopic skillPlanId={skillPlanId} day={day} />
+              <DailyTopic skillPlanId={skillPlanId} day={day} currentDay={currentDay} />
             </Suspense>
 
             <Suspense fallback={
@@ -107,21 +150,63 @@ export default function DailySessionPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <Card>
-              <Suspense fallback={
-                <CardContent className="space-y-2">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
+            {isToday && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Session Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Actions 
+                    skillPlanId={skillPlanId} 
+                    day={day}
+                    currentDay={currentDay}
+                    notesContent={notesContent}
+                    onComplete={handleCompleteSuccess}
+                  />
                 </CardContent>
-              }>
-                <Actions 
-                  skillPlanId={skillPlanId} 
-                  day={day}
-                  notesContent={notesContent}
-                  onComplete={handleCompleteSuccess}
-                />
-              </Suspense>
-            </Card>
+              </Card>
+            )}
+
+            {(isPastDay || isCompletedDay) && (
+              <Card className="bg-muted/50">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="text-green-600">✅</span>
+                    Day Completed
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-muted-foreground text-sm">
+                    This day has been completed. You can review the content and notes, 
+                    but no further actions are available.
+                  </p>
+                  <Button 
+                    onClick={() => router.push(`/skillPlans/${skillPlanId}`)}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    Return to Plan Overview
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {isFutureDay && (
+              <Card className="bg-amber-50 border-amber-200">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="text-amber-600">🔒</span>
+                    Upcoming Day
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-amber-700 text-sm">
+                    This day hasn't started yet. Complete the current day to unlock 
+                    future sessions.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </Suspense>

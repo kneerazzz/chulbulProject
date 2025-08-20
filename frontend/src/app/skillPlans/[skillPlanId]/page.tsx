@@ -3,10 +3,23 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ChevronLeft, CalendarDays, Target, Clock, CheckCircle } from "lucide-react";
+import { 
+  Loader2, 
+  ChevronLeft, 
+  CalendarDays, 
+  Target, 
+  Clock, 
+  CheckCircle, 
+  BookOpen,
+  Trash2,
+  Edit,
+  Play,
+  TrendingUp,
+  BarChart3
+} from "lucide-react";
 import { format } from "date-fns";
 import axios from "axios";
 import Link from "next/link";
@@ -30,6 +43,15 @@ interface SkillPlanDetail {
   progress: number;
 }
 
+// Utility function to safely format dates
+const safeFormatDate = (dateString: string, formatString: string = 'MMM dd, yyyy') => {
+  if (!dateString) return 'Date not available';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Invalid date';
+  
+  return format(date, formatString);
+};
 
 export default function SkillPlanDetailPage() {
   const { skillPlanId } = useParams();
@@ -38,7 +60,6 @@ export default function SkillPlanDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
-
 
   useEffect(() => {
     const fetchSkillPlan = async () => {
@@ -56,52 +77,52 @@ export default function SkillPlanDetailPage() {
     fetchSkillPlan();
   }, [skillPlanId]);
 
-
   const deleteSkillPlan = async() => {
     try {
-        await axios.delete(`/api/skillPlan/delete-plan?skillPlanId=${skillPlanId}`, {
-            withCredentials: true
-        })
-        toast.success("Skill Plan deleted successfully")
-        router.push("/skillPlans")
+      await axios.delete(`/api/skillPlan/delete-plan?skillPlanId=${skillPlanId}`, {
+        withCredentials: true
+      })
+      toast.success("Skill Plan deleted successfully")
+      router.push("/skillPlans")
     } catch (error) {
-        console.error("Error deleting Skill Plan ", error)
-        setError("Failed to delete skill plan")
-        toast.error("Error deleting Skill plan")
+      console.error("Error deleting Skill Plan ", error)
+      setError("Failed to delete skill plan")
+      toast.error("Error deleting Skill plan")
     }
   }
 
-
   useEffect(() => {
     const skillPlanProgress = async() => {
-        try{
-            const res = await axios.get(`/api/skillPlan/plan-progress?skillPlanId=${skillPlanId}`, {
-                withCredentials: true
-            })
-            setProgress(res.data.data)
-            return progress;
-        }catch(error){
-            console.log(error);
-            setError("Failed to get the skill Plan progress")        
-        } finally{
-            setLoading(false)
-        }
+      try{
+        const res = await axios.get(`/api/skillPlan/plan-progress?skillPlanId=${skillPlanId}`, {
+          withCredentials: true
+        })
+        setProgress(res.data.data)
+        return progress;
+      }catch(error){
+        console.log(error);
+        setError("Failed to get the skill Plan progress")        
+      } finally{
+        setLoading(false)
+      }
     }
-     skillPlanProgress();
+    skillPlanProgress();
   }, [skillPlanId])
-
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading your skill plan...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8">
+      <div className="container mx-auto py-8 px-4 text-center">
         <p className="text-red-500 mb-4">{error}</p>
         <Button variant="outline" onClick={() => window.location.reload()}>
           Retry
@@ -111,7 +132,14 @@ export default function SkillPlanDetailPage() {
   }
 
   if (!skillPlan) {
-    return <div className="text-center py-8">Skill plan not found</div>;
+    return (
+      <div className="container mx-auto py-8 px-4 text-center">
+        <p className="text-muted-foreground mb-4">Skill plan not found</p>
+        <Button onClick={() => router.push("/skillPlans")}>
+          Back to All Plans
+        </Button>
+      </div>
+    );
   }
 
   const createTopic = async(skillPlan: SkillPlanDetail) => {
@@ -130,101 +158,123 @@ export default function SkillPlanDetailPage() {
   }
 
   function getCompletionEstimate(skillPlan: SkillPlanDetail) {
-      // Simple remaining days calculation
-      const simpleEstimate = new Date();
-      simpleEstimate.setDate(simpleEstimate.getDate() + skillPlan.durationInDays - skillPlan.currentDay);
+    // Simple remaining days calculation
+    const simpleEstimate = new Date();
+    simpleEstimate.setDate(simpleEstimate.getDate() + skillPlan.durationInDays - skillPlan.currentDay);
 
-      // Pace-based calculation if enough data exists
-      if (skillPlan.completedDays.length > 1 && skillPlan.createdAt) {
-        // Convert dates to timestamps (numbers) before subtraction
-        const startDate = new Date(skillPlan.createdAt).getTime(); // returns number
-        const currentDate = new Date().getTime(); // returns number
-        const daysSinceStart = Math.floor((currentDate - startDate) / (86400 * 1000));
-        
-        const completionPace = daysSinceStart / skillPlan.completedDays.length;
-        const paceEstimate = new Date();
-        paceEstimate.setDate(
-          paceEstimate.getDate() + 
-          Math.ceil((skillPlan.durationInDays - skillPlan.currentDay) * completionPace)
-        );
-        return paceEstimate;
+    // Pace-based calculation if enough data exists
+    if (skillPlan.completedDays.length > 1 && skillPlan.createdAt) {
+      // Safely parse the createdAt date
+      const startDate = new Date(skillPlan.createdAt);
+      // Check if the date is valid
+      if (isNaN(startDate.getTime())) {
+        return simpleEstimate;
       }
-      return simpleEstimate;
+      
+      const currentDate = new Date();
+      const daysSinceStart = Math.floor((currentDate.getTime() - startDate.getTime()) / (86400 * 1000));
+      
+      const completionPace = daysSinceStart / skillPlan.completedDays.length;
+      const paceEstimate = new Date();
+      paceEstimate.setDate(
+        paceEstimate.getDate() + 
+        Math.ceil((skillPlan.durationInDays - skillPlan.currentDay) * completionPace)
+      );
+      return paceEstimate;
+    }
+    return simpleEstimate;
   }
+
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => router.back()} className="gap-2">
-          <ChevronLeft className="h-4 w-4" />
-          Back to All Plans
-        </Button>
+    <div className="container mx-auto py-8 px-4 max-w-6xl">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-9 w-9">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{skillPlan.skill.title}</h1>
+            <p className="text-muted-foreground">{skillPlan.skill.description}</p>
+          </div>
+        </div>
+        <Badge variant="outline" className="text-sm px-3 py-1">
+          {skillPlan.skill.category}
+        </Badge>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Plan Overview Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-2xl">{skillPlan.skill.title}</CardTitle>
-                  <p className="text-muted-foreground">{skillPlan.skill.description}</p>
-                </div>
-                <Badge variant="outline">{skillPlan.skill.category}</Badge>
-              </div>
+          {/* Progress Overview Card */}
+          <Card className="border-0 shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Progress Overview
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Target Level</p>
-                    <p className="font-medium">{skillPlan.targetLevel}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Current Day</p>
-                    <p className="font-medium">
-                      {skillPlan.currentDay}/{skillPlan.durationInDays}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Est. Completion</p>
-                    <p className="font-medium">
-                      {format(getCompletionEstimate(skillPlan), 'MMM dd, yyyy')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    <p className="font-medium">
-                      {skillPlan.isCompleted ? "Completed" : "In Progress"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 mb-6">
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Overall Progress</span>
+                  <span>Overall Completion</span>
                   <span>{progress}%</span>
                 </div>
                 <Progress value={progress} className="h-3" />
               </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex flex-col gap-1 p-3 bg-muted/30 rounded-lg">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Target className="h-4 w-4" />
+                    <span className="text-xs">Target Level</span>
+                  </div>
+                  <p className="font-semibold">{skillPlan.targetLevel}</p>
+                </div>
+                
+                <div className="flex flex-col gap-1 p-3 bg-muted/30 rounded-lg">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span className="text-xs">Current Day</span>
+                  </div>
+                  <p className="font-semibold">
+                    {skillPlan.currentDay}/{skillPlan.durationInDays}
+                  </p>
+                </div>
+                
+                <div className="flex flex-col gap-1 p-3 bg-muted/30 rounded-lg">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <CalendarDays className="h-4 w-4" />
+                    <span className="text-xs">Est. Completion</span>
+                  </div>
+                  <p className="font-semibold">
+                    {safeFormatDate(getCompletionEstimate(skillPlan).toString())}
+                  </p>
+                </div>
+                
+                <div className="flex flex-col gap-1 p-3 bg-muted/30 rounded-lg">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-xs">Status</span>
+                  </div>
+                  <p className="font-semibold">
+                    {skillPlan.isCompleted ? "Completed" : "In Progress"}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
+
           {/* Daily Progress Grid */}
-          <Card>
+          <Card className="border-0 shadow-md">
             <CardHeader>
-              <CardTitle>Daily Progress</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Daily Progress
+              </CardTitle>
+              <CardDescription>
+                Track your progress day by day. Click on completed days to review.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-7 gap-2">
@@ -232,23 +282,50 @@ export default function SkillPlanDetailPage() {
                   const day = index + 1;
                   const isCompleted = skillPlan.completedDays.includes(day);
                   const isCurrent = day === skillPlan.currentDay && !skillPlan.isCompleted;
-                  
+                  const isFuture = day > skillPlan.currentDay;
+
+                  if (isFuture) {
+                    // Future days are locked
+                    return (
+                      <div key={day} className="flex flex-col items-center gap-1">
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted text-muted-foreground cursor-not-allowed">
+                          {day}
+                        </div>
+                        <span className="text-xs text-muted-foreground">Locked</span>
+                      </div>
+                    );
+                  }
+
+                  if (isCurrent) {
+                    // Current day → call createTopic()
+                    return (
+                      <button
+                        key={day}
+                        onClick={() => createTopic(skillPlan)}
+                        className="flex flex-col items-center gap-1 cursor-pointer group"
+                      >
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary text-primary-foreground group-hover:bg-primary/90 transition-colors">
+                          {day}
+                        </div>
+                        <span className="text-xs">Today</span>
+                      </button>
+                    );
+                  }
+
+                  // Past days → simple link
                   return (
-                    <Link 
-                      key={day} 
+                    <Link
+                      key={day}
                       href={`/skillPlans/${skillPlanId}/day/${day}`}
-                      className="flex flex-col items-center gap-1"
+                      className="flex flex-col items-center gap-1 group"
                     >
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center 
-                          ${isCompleted ? "bg-green-500 text-white" : 
-                           isCurrent ? "bg-blue-500 text-white" : "bg-muted"}`}
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform
+                          ${isCompleted ? "bg-green-500 text-white" : "bg-muted"}`}
                       >
                         {day}
                       </div>
-                      <span className="text-xs">
-                        {isCurrent ? "Today" : isCompleted ? "✓" : ""}
-                      </span>
+                      <span className="text-xs">{isCompleted ? "Completed" : "Incomplete"}</span>
                     </Link>
                   );
                 })}
@@ -258,22 +335,30 @@ export default function SkillPlanDetailPage() {
         </div>
 
         {/* Sidebar Actions */}
-        <div className="space-y-4">
-          <Card>
+        <div className="space-y-6">
+          <Card className="border-0 shadow-md">
             <CardHeader>
-              <CardTitle>Actions</CardTitle>
+              <CardTitle>Plan Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-3">
+              <Link href={`/skillPlans/${skillPlanId}/learned-topics`}>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  View Learned Topics
+                </Button>
+              </Link>
               <Link href={`/skillPlans/${skillPlanId}/edit`}>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <Edit className="h-4 w-4" />
                   Edit Plan
                 </Button>
               </Link>
               <Button 
                 variant="outline" 
-                className="w-full text-red-600 hover:text-red-600"
+                className="w-full justify-start gap-2 text-destructive hover:text-destructive"
                 onClick={deleteSkillPlan}
               >
+                <Trash2 className="h-4 w-4" />
                 Delete Plan
               </Button>
             </CardContent>
@@ -281,17 +366,50 @@ export default function SkillPlanDetailPage() {
 
           {/* Today's Quick Access */}
           {!skillPlan.isCompleted && (
-            <Card>
+            <Card className="border-0 shadow-md bg-primary/5">
               <CardHeader>
                 <CardTitle>Today's Session</CardTitle>
+                <CardDescription>
+                  Continue your learning journey with today's topic
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full" onClick={() => createTopic(skillPlan)} disabled={loading}>
-                  Go to Day {skillPlan.currentDay}
+                <Button 
+                  className="w-full gap-2" 
+                  onClick={() => createTopic(skillPlan)} 
+                  disabled={loading}
+                >
+                  <Play className="h-4 w-4" />
+                  Start Day {skillPlan.currentDay}
                 </Button>
               </CardContent>
             </Card>
           )}
+
+          {/* Stats Card */}
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle>Plan Statistics</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Days Completed</span>
+                <span className="font-medium">{skillPlan.completedDays.length}/{skillPlan.durationInDays}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Success Rate</span>
+                <span className="font-medium">
+                  {skillPlan.durationInDays > 0 
+                    ? Math.round((skillPlan.completedDays.length / skillPlan.durationInDays) * 100) 
+                    : 0}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Started On</span>
+                <span className="font-medium">{safeFormatDate(skillPlan.createdAt)}</span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -7,7 +7,6 @@ export async function PATCH(req: NextRequest) {
             const token  = requireAuth()
             const url = new URL(req.url)
             const cookieHeader = req.headers.get("cookie") || ''
-            const body = await req.json()
             const skillPlanId = url.searchParams.get("skillPlanId")
         
             const backendRes = await fetch(`${API_BASE_URL}/skillplans/c/${skillPlanId}/complete-current-day`, {
@@ -17,7 +16,6 @@ export async function PATCH(req: NextRequest) {
                     Cookie: cookieHeader,
                     ...(token ? {Authorization: `Bearer ${token}`} : {})
                 },
-                body: JSON.stringify(body),
                 credentials: 'include'
             })
             if(!backendRes.ok){
