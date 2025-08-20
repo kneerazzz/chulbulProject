@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema({
     },
     completedSkills: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "skill"
+        ref: "Skill"
     }],
     level: {
         type: Number,

@@ -118,60 +118,56 @@ const getAllSkillPlans = asyncHandler(async(req, res) => {
 })
 
 const completeCurrentDay = asyncHandler(async(req, res) => {
-    const { skillPlanId } = req.params;
-    const user = req.user;
+  const { skillPlanId } = req.params;
+  const user = req.user;
 
-    // Validate input
-    if (!skillPlanId) throw new ApiError(400, "Skill plan ID required");
-    if (!user) throw new ApiError(401, "Unauthorized");
+  if (!skillPlanId) throw new ApiError(400, "Skill plan ID required");
+  if (!user) throw new ApiError(401, "Unauthorized");
 
-    // Start transaction
-    const session = await mongoose.startSession();
-    session.startTransaction();
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    try {
-        const skillPlan = await SkillPlan.findById(skillPlanId).session(session);
-        if (!skillPlan) throw new ApiError(404, "Skill plan not found");
-        if (!skillPlan.user.equals(user._id)) throw new ApiError(403, "Unauthorized");
+  try {
+    const skillPlan = await SkillPlan.findById(skillPlanId).session(session);
+    if (!skillPlan) throw new ApiError(404, "Skill plan not found");
+    if (!skillPlan.user.equals(user._id)) throw new ApiError(403, "Unauthorized");
 
-        const today = skillPlan.currentDay;
-        
-        // Validate day completion
-        if (skillPlan.completedDays.includes(today)) {
-            throw new ApiError(400, "Day already completed");
-        }
+    const today = skillPlan.currentDay;
 
-        // Get today's topic if exists
-        const todayTopic = await DailyTopic.findOne({
-            skillPlan: skillPlan._id,
-            day: today
-        }).session(session);
+    if (skillPlan.completedDays.includes(today)) {
+      throw new ApiError(400, "Day already completed");
+    }
 
-        // Update skill plan
-        if (todayTopic?.topic && !skillPlan.completedSubtopics.some(
-            sub => sub.title.toLowerCase() === todayTopic.topic.toLowerCase()
-        )) {
-            skillPlan.completedSubtopics.push({
-                title: todayTopic.topic,
-                completedAt: new Date()
-            });
-        }
+    // Only add the day to completed if user explicitly calls this endpoint
+    skillPlan.completedDays.push(today);
+    skillPlan.lastDeliveredNote = new Date();
 
-        skillPlan.completedDays.push(today);
-        skillPlan.lastDeliveredNote = new Date();
+    // Update completed subtopics if a topic exists
+    const todayTopic = await DailyTopic.findOne({
+      skillPlan: skillPlan._id,
+      day: today
+    }).session(session);
 
-        // Handle plan completion
-        if (today >= skillPlan.durationInDays) {
-            skillPlan.isCompleted = true;
-            if (!user.completedSkills.includes(skillPlan.skill)) {
-                user.completedSkills.push(skillPlan.skill);
-            }
-        } else {
-            skillPlan.currentDay += 1;
-        }
+    if (todayTopic?.topic && !skillPlan.completedSubtopics.some(
+      sub => sub.title.toLowerCase() === todayTopic.topic.toLowerCase()
+    )) {
+      skillPlan.completedSubtopics.push({
+        title: todayTopic.topic,
+        completedAt: new Date()
+      });
+    }
 
-        // Update streak
-        updateStreak(user);
+    // Handle plan completion
+    if (today >= skillPlan.durationInDays) {
+      skillPlan.isCompleted = true;
+      if (!user.completedSkills.includes(skillPlan.skill)) {
+        user.completedSkills.push(skillPlan.skill);
+      }
+    } else {
+      skillPlan.currentDay += 1;
+    }
+
+    updateStreak(user);
         // Send notifications (optimized)
         const notifications = [];
         if (user.streak > 1 && shouldNotify(user, "reminder")) {
@@ -202,24 +198,24 @@ const completeCurrentDay = asyncHandler(async(req, res) => {
         }
 
         // Save all changes
-        await Promise.all([
-            skillPlan.save({ session }),
-            user.save({ validateBeforeSave: false, session })
-        ]);
+    await Promise.all([
+      skillPlan.save({ session }),
+      user.save({ validateBeforeSave: false, session })
+    ]);
 
-        await session.commitTransaction();
+    await session.commitTransaction();
 
-        return res.status(200).json(
-            new ApiResponse(200, skillPlan, `Day ${today} completed successfully`)
-        );
-
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
-    } finally {
-        session.endSession();
-    }
+    return res.status(200).json(
+      new ApiResponse(200, skillPlan, `Day ${today} marked as complete`)
+    );
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
 });
+
 
 const updateSkillPlan = asyncHandler(async(req, res) => {
     const {skillPlanId} = req.params;
