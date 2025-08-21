@@ -58,7 +58,7 @@ export function LoginAuthForm() {
       const {user, accessToken, refreshToken} = res.data.data
 
       login(user, accessToken, refreshToken)
-      router.push("/")
+      router.push("/dashboard")
       toast.success("Login successful!", {
         description: `Welcome back, ${data.identifier}`,
       });

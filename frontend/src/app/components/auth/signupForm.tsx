@@ -64,7 +64,7 @@ export function AuthForm() {
       });
 
       login(user, accessToken, refreshToken)
-      router.push("/")
+      router.push("/dashboard")
       
       // Reset form after successful submission
       form.reset();

@@ -96,10 +96,10 @@ const Navbar = () => {
                   <Link href="/about">About</Link>
                 </Button>
                 <Button asChild variant="ghost" size="sm">
-                  <Link href="/features">Features</Link>
+                  <Link href="/about">Features</Link>
                 </Button>
                 <Button asChild variant="ghost" size="sm">
-                  <Link href="/contact">Contact</Link>
+                  <Link href="/about">Contact</Link>
                 </Button>
               </>
             )}
