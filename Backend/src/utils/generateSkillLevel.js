@@ -1,7 +1,6 @@
 import { geminiClient } from "./geminiClient.js";
 
 import { ApiError } from "./apiError.js";
-import { titleToHtmlFriendly } from "simple-icons/sdk";
 
 
 const generateSkillLevel = async ({skillName, category}) => {

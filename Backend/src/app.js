@@ -6,11 +6,14 @@ import cookieParser from "cookie-parser"
 
 const app = express();
 
-app.use(cors({
-    origin: "http://localhost:3000",
-    credentials: true
-}))
+const allowedOrigins = process.env.NODE_ENV === "production"
+    ? ["https://chulbul.vercel.app"]
+    : ["http://localhost:3000"];
 
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true
+}));
 app.use(express.json({
     limit: "16kb"
 }));
