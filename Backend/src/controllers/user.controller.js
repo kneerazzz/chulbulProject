@@ -186,6 +186,7 @@ const getUserDetails = asyncHandler(async(req, res) => {
     if(!user) {
         throw new ApiError(401, "Invalid request")
     }
+    
     return res
     .status(200)
     .json(

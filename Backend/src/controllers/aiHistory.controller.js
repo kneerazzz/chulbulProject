@@ -69,7 +69,32 @@ const deleteAiHistory = asyncHandler(async(req, res) => {
 })
 
 
+const deleteSingleLog = asyncHandler(async(req, res) => {
+    const user = req.user
+    const {skillPlanId} = req.params
+
+    const {id} = req.query
+
+    if(!user || !skillPlanId || !id){
+        throw new ApiError(400, "Missing params")
+    }
+    const deleteOneLog = await AiHistory.findOneAndDelete({
+        user: user._id,
+        skillPlanId: skillPlanId,
+        _id: id
+    })
+    if(deleteOneLog){
+        throw new ApiError(500, "Error deleting history")
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {}, "AI history deleted successfully")
+    )
+})
+
 export {
     getAiHistory,
-    deleteAiHistory
+    deleteAiHistory,
+    deleteSingleLog
 }
