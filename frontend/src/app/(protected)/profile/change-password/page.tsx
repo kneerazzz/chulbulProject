@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import axios from "axios";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card";
 import { toast } from "sonner";
 
 export default function ChangePasswordPage() {
