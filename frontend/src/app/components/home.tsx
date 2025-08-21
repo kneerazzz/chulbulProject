@@ -3,18 +3,15 @@
 import React, { useState, useEffect } from 'react'
 import { 
   Target, 
-  Zap, 
   TrendingUp, 
   Brain,
   BookOpen,
-  Award,
   Users,
   Calendar,
   BarChart3,
   CheckCircle,
   ArrowRight,
   Sparkles,
-  Timer,
   Trophy,
   Star,
   Flame,
@@ -31,12 +28,9 @@ import {
   Eye,
   Heart,
   Cpu,
-  Database,
-  Layers,
-  PieChart,
-  Router
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 // Enhanced Hero Section
 const HeroSection = () => {
   const [isVisible, setIsVisible] = useState(false)
@@ -57,7 +51,9 @@ const HeroSection = () => {
 
       {/* Background image with overlay */}
       <div className="absolute inset-0 z-0">
-        <img
+        <Image
+          width={500}
+          height={300}
           src="/assets/skillSprint.jpg"
           alt="Background"
           className="object-cover w-full h-full opacity-10"
@@ -148,7 +144,6 @@ const HeroSection = () => {
 
 // Enhanced Features Section
 const FeaturesSection = () => {
-  const [activeTab, setActiveTab] = useState(0)
 
   const mainFeatures = [
     {
@@ -369,7 +364,9 @@ const ProductPreview = () => {
                 
                 {/* Product Image */}
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-neutral-700 max-w-5xl mx-auto group">
-                  <img
+                  <Image
+                    width={500}
+                    height={300}
                     src={demo.image}
                     alt={`${demo.title} Preview`}
                     className="w-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -508,7 +505,7 @@ const CtaSection = () => {
               Get Started Free
             </button>
           </div>
-            <p className='text-white font-bold text-xl mb-4'>It won't do Shii. Maybe i will add functionality later</p>
+            <p className='text-white font-bold text-xl mb-4'>It won&apos;t do Shii. Maybe i will add functionality later</p>
           {/* Benefits */}
           <div className="flex flex-wrap justify-center gap-6 mb-12">
             {benefits.map((benefit, index) => (
@@ -551,7 +548,7 @@ const CtaSection = () => {
           {testimonials.map((testimonial, index) => (
             <div key={index} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl">
               <div className="text-4xl mb-4">{testimonial.avatar}</div>
-              <p className="text-gray-300 mb-4 italic">"{testimonial.quote}"</p>
+              <p className="text-gray-300 mb-4 italic">&quot;{testimonial.quote}&quot;</p>
               <div>
                 <div className="font-semibold text-white">{testimonial.author}</div>
                 <div className="text-gray-400 text-sm">{testimonial.role}</div>

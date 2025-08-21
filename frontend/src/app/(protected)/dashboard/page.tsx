@@ -23,35 +23,15 @@ import {
   Brain,
   Flame,
   Star,
-  Calendar,
-  Users,
   TrendingDown,
-  Crown,
   Sparkles,
   GanttChartSquare,
   Lightbulb,
-  BookHeart,
-  Timer,
-  CalendarDays,
-  ChevronLeft,
-  ChevronDown,
-  MoreHorizontal,
-  Download,
-  Filter,
   Search,
-  Eye,
-  Edit3,
-  Trash2,
-  Share2,
-  BookPlus,
-  Goal,
   BrainCircuit,
-  NotebookPen,
-  Clock4,
   BarChart2,
-  Target as TargetIcon
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/app/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Progress } from '@/app/components/ui/progress'
 import { Avatar, AvatarImage, AvatarFallback } from '@/app/components/ui/avatar'
@@ -202,7 +182,7 @@ const Dashboard = () => {
     </div>
   )
 
-  const { user, stats, skillPlans, recentActivity, latestAchievement, weeklyProgress, recommendedSkills } = data
+  const { user, stats, skillPlans, recentActivity, latestAchievement, recommendedSkills } = data
 
   return (
     <div className="min-h-screen bg-black p-6">

@@ -2,22 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/app/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/app/components/ui/card";
 import { Progress } from "@/app/components/ui/progress";
 import { Badge } from "@/app/components/ui/badge";
-import { Label } from "@/app/components/ui/label";
 import { Input } from "@/app/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/app/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { 
-  Loader2, 
-  ChevronLeft, 
-  Calendar, 
-  Target, 
-  Clock, 
+  Calendar,  
   TrendingUp, 
   Plus, 
   Filter, 
@@ -25,24 +20,12 @@ import {
   BookOpen,
   BarChart3,
   Award,
-  Zap,
-  Brain,
-  ArrowRight,
-  Trophy,
   Flame,
-  CalendarDays,
-  TargetIcon,
-  Clock4,
   Edit3,
-  Trash2,
-  Star,
-  ChevronRight,
-  CheckCircle2,
   Play,
   Pause,
-  GanttChart
 } from "lucide-react";
-import { format, addDays, differenceInDays, isBefore, isAfter } from "date-fns";
+import { format} from "date-fns";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -75,22 +58,10 @@ interface SkillPlanDetail {
   totalHoursSpent?: number;
 }
 
-const LEVELS = [
-  { value: "beginner", label: "Beginner", color: "bg-red-500/20 text-red-400 border-red-500/30" },
-  { value: "intermediate", label: "Intermediate", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-  { value: "advanced", label: "Advanced", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-  { value: "expert", label: "Expert", color: "bg-green-500/20 text-green-400 border-green-500/30" }
-];
-
-const PRIORITIES = [
-  { value: "low", label: "Low", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-  { value: "medium", label: "Medium", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-  { value: "high", label: "High", color: "bg-red-500/20 text-red-400 border-red-500/30" }
-];
 
 // Edit Skill Plan Component
 // Skill Plans Overview Component
-export function SkillPlansOverview() {
+export default function SkillPlansOverview() {
   const router = useRouter();
   const [skillPlans, setSkillPlans] = useState<SkillPlanDetail[]>([]);
   const [loading, setLoading] = useState(true);
@@ -586,10 +557,4 @@ export function SkillPlansOverview() {
       </div>
     </div>
   );
-}
-
-// Main page component with routing
-export default function SkillPlansPage() {
-  // Otherwise show the overview
-  return <SkillPlansOverview />;
 }

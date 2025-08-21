@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import { Textarea } from '@/app/components/ui/textarea';
 import { Button } from '@/app/components/ui/button';
 import { Loader2, Edit, Save, Trash2, Plus, BookOpen } from 'lucide-react';
@@ -34,12 +34,13 @@ export default function Notes({
   const isFutureDay = day > currentDay;
   const canEdit = isCurrentDay || isPastDay; // Allow editing for current and past days
 
-  // Reusable fetch function
-  const fetchNotes = async () => {
+  // Reusable fetch functio
+
+  const fetchNotes = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await axios.get(
-        `/api/notes/get-note?skillPlanId=${skillPlanId}&day=${day}`, 
+        `/api/notes/get-note?skillPlanId=${skillPlanId}&day=${day}`,
         { withCredentials: true }
       );
 
@@ -65,11 +66,11 @@ export default function Notes({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [skillPlanId, day, onNotesChange]); // include deps
 
   useEffect(() => {
     fetchNotes();
-  }, [skillPlanId, day]);
+  }, [fetchNotes]);
 
   const handleContentChange = (value: string) => {
     setContent(value);

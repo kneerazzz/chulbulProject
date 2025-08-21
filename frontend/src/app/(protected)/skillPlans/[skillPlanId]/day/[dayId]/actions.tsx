@@ -2,7 +2,7 @@
 import { Button } from '@/app/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Loader2, CheckCircle, ArrowLeft, Calendar, Target } from 'lucide-react';
+import { Loader2, CheckCircle, ArrowLeft, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardFooter } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
@@ -11,7 +11,6 @@ import axios from 'axios';
 export default function SessionActions({
   skillPlanId,
   day,
-  notesContent,
   onComplete,
   currentDay,
 }: {
@@ -28,7 +27,6 @@ export default function SessionActions({
   // Determine access permissions
   const isCurrentDay = day === currentDay;
   const isPastDay = day < currentDay;
-  const isFutureDay = day > currentDay;
   const canComplete = isCurrentDay; // Only current day can be completed
 
   const handleCompleteDay = async () => {

@@ -6,9 +6,6 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest){
     try {
             const token = await requireAuth()
-        
-            const url = new URL(req.url)
-            const notificationId = url.searchParams.get("id")
             const cookieHeader = req.headers.get("cookie") || ""
         
             const backendRes = await fetch(`${API_BASE_URL}/notifications/get-all-notifications`, {

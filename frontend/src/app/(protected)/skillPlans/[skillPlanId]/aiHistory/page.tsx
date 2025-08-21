@@ -34,19 +34,25 @@ export default function SkillPlanHistoryPage() {
   const [deleting, setDeleting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchHistory = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`/api/aiHistory/get-ai-history?skillPlanId=${skillPlanId}`, {
-        withCredentials: true,
-      });
-      setHistory(res.data.data || []);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to load history");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!skillPlanId) return;
+
+    const fetchHistory = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`/api/aiHistory/get-ai-history?skillPlanId=${skillPlanId}`, {
+          withCredentials: true,
+        });
+        setHistory(res.data.data || []);
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || "Failed to load history");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [skillPlanId]);
 
   const clearHistory = async () => {
     setDeleting(true);
@@ -78,10 +84,6 @@ export default function SkillPlanHistoryPage() {
       setDeletingId(null);
     }
   };
-
-  useEffect(() => {
-    if (skillPlanId) fetchHistory();
-  }, [skillPlanId]);
 
   // Group history by day
   const historyByDay = history.reduce((acc, item) => {

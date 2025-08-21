@@ -201,7 +201,7 @@ export default function DailySessionPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-amber-700 text-sm">
-                    This day hasn't started yet. Complete the current day to unlock 
+                    This day hasn&apos;t started yet. Complete the current day to unlock 
                     future sessions.
                   </p>
                 </CardContent>

@@ -46,7 +46,6 @@ import {
   Sigma 
 } from "lucide-react";
 import axios from "axios";
-import { Value } from "@radix-ui/react-select";
 
 const NewSkillPage = () => {
   const router = useRouter();
@@ -492,7 +491,7 @@ const NewSkillPage = () => {
               <CardContent className="space-y-3 text-sm text-gray-400">
                 <div className="flex gap-3">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Be specific with skill names (e.g., "React Development" vs "Programming")</p>
+                  <p>Be specific with skill names (e.g., &quot;React Development&quot; vs &quot;Programming&quot;)</p>
                 </div>
                 <div className="flex gap-3">
                   <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>

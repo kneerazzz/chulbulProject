@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/app/components/ui/button";
-import { API_BASE_URL } from "@/lib/api";
 import axios from "axios";
 import { toast } from "sonner";
 

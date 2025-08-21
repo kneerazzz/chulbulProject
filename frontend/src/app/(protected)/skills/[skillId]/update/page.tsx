@@ -307,7 +307,7 @@ const UpdateSkillPage = () => {
                   Current Values
                 </CardTitle>
                 <CardDescription className="text-gray-400">
-                  Your skill's current information before any updates
+                  Your skill&apos;s current information before any updates
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -388,7 +388,7 @@ const UpdateSkillPage = () => {
                     {formData.title !== originalData.title && (
                       <div className="flex items-center gap-2 text-sm">
                         <ArrowRight className="h-3 w-3 text-gray-400" />
-                        <span className="text-gray-500">Changed from: "{originalData.title}"</span>
+                        <span className="text-gray-500">Changed from: &quot;{originalData.title}&quot;</span>
                       </div>
                     )}
                   </div>
@@ -435,7 +435,7 @@ const UpdateSkillPage = () => {
                       <div className="flex items-center gap-2 text-sm">
                         <ArrowRight className="h-3 w-3 text-gray-400" />
                         <span className="text-gray-500">
-                          Changed from: "{getCategoryInfo(originalData.category).label}"
+                          Changed from: &quot;{getCategoryInfo(originalData.category).label}&quot;
                         </span>
                       </div>
                     )}

@@ -13,13 +13,11 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { Checkbox } from "../ui/checkbox"; // Add this import
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from '@/store/auth';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import Link from "next/link";
 
 const FormSchema = z.object({
   username: z.string().min(3, {

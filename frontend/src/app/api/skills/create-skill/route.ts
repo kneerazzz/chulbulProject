@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
 
     // Return backend data as JSON response
     return NextResponse.json(data);
-  } catch (error) {
+  } catch (error: any) {
     // Token missing or invalid
-    return new NextResponse("Unauthorized", { status: 401 });
+    return new NextResponse(error, { status: 401 });
   }
 }

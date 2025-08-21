@@ -9,11 +9,9 @@ import { useUser } from "@/hooks/useUser"
 import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
 import { useEffect, useState } from "react"
-import { Skill } from "@/types"
-
 // Type definitions
 type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
-
+/*
 interface User {
   _id: string;
   fullname: string;
@@ -41,6 +39,8 @@ interface User {
     };
   };
 }
+
+*/
 
 const ProfilePage = () => {
   const { data: user, isLoading, isError } = useUser()
@@ -422,7 +422,7 @@ const ProfilePage = () => {
                   <div>
                     <h4 className="font-medium">Based on Your Interests</h4>
                     <p className="text-sm text-muted-foreground">
-                      We recommend skills that align with the domains you're interested in.
+                      We recommend skills that align with the domains you&apos;re interested in.
                     </p>
                   </div>
                 </div>

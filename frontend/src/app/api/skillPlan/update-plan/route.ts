@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest) {
             const data =  await backendRes.json()
 
             return NextResponse.json(data)
-    } catch (error) {
-        return new NextResponse("Unauthorised", {status: 401})
+    } catch (error: any) {
+        return new NextResponse(error, {status: 401})
     }
 }

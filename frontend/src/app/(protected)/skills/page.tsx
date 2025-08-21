@@ -5,7 +5,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Skill } from "@/types";
 import { Button } from "@/app/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/app/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { Progress } from "@/app/components/ui/progress";
 import { 
@@ -18,8 +18,6 @@ import {
   BarChart3,
   ChevronLeft,
   Award,
-  Zap,
-  Brain,
   ArrowRight
 } from "lucide-react";
 
@@ -341,7 +339,7 @@ export default function SkillsPage() {
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">No Skills Found</h3>
               <p className="text-gray-400 mb-6 max-w-md mx-auto">
-                No skills match the selected category <strong>"{selectedCategory}"</strong>. 
+                No skills match the selected category <strong>&quot;{selectedCategory}&quot;</strong>. 
                 Try selecting a different category or view all skills.
               </p>
               <div className="space-y-3">

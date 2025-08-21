@@ -6,8 +6,6 @@ import { NextRequest, NextResponse } from "next/server";
 export async function PATCH(req: NextRequest){
     try {
             const token = await requireAuth()
-        
-            const url = new URL(req.url)
             const cookieHeader = req.headers.get("cookie") || ""
         
             const backendRes = await fetch(`${API_BASE_URL}/notifications/mark-all-notifications-read`, {

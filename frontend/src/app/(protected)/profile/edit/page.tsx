@@ -1,12 +1,11 @@
 "use client";
-
-import { useState } from "react";
 import ChangeProfilePic from "./change-profile";
 import EditProfile from "./editDetails";
+import { useAuth } from "@/store/auth";
 
-export default function ProfilePage({ user }: { user: any }) {
-  const [currentUser, setCurrentUser] = useState(user);
-
+export default function ProfilePage() {
+  const user = useAuth()
+  const currentUser = user
   return (
     <div className="max-w-2xl mx-auto space-y-8 p-6">
       {/* Profile Pic Section */}

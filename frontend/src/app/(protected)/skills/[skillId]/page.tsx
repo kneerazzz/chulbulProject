@@ -151,7 +151,7 @@ export default function SkillDetailPage({ params }: { params: Promise<{ skillId:
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">Skill Not Found</h3>
             <p className="text-gray-400 mb-6">
-              The skill you're looking for doesn't exist or has been removed.
+              The skill you&apos;re looking for doesn&apos;t exist or has been removed.
             </p>
             <Button 
               onClick={() => router.push("/skills")} 

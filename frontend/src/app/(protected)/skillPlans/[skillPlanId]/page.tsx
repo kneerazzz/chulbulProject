@@ -536,7 +536,7 @@ export default function SkillPlanDetailPage() {
               <Card className="bg-neutral-900 border-neutral-800 shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-white">
-                    <Play className="h-5 w-5 text-cyan-400" /> Today's Session
+                    <Play className="h-5 w-5 text-cyan-400" /> Today&apos;s Session
                   </CardTitle>
                   <CardDescription className="text-gray-400">Jump back in where you left off.</CardDescription>
                 </CardHeader>
@@ -566,13 +566,13 @@ export default function SkillPlanDetailPage() {
                 <ul className="list-disc pl-5 space-y-2">
                   {consistency >= 70 ? (
                     <>
-                      <li>You're on a roll. Increase difficulty slightly for the next 3 days.</li>
+                      <li>You&apos;re on a roll. Increase difficulty slightly for the next 3 days.</li>
                       <li>Try a timed review session (20–25 min) before starting new material.</li>
                     </>
                   ) : consistency >= 40 ? (
                     <>
                       <li>Streak is decent. Schedule shorter, daily sessions (15–20 min).</li>
-                      <li>Pre-plan tomorrow's topic at the end of each session.</li>
+                      <li>Pre-plan tomorrow&apos;s topic at the end of each session.</li>
                     </>
                   ) : (
                     <>

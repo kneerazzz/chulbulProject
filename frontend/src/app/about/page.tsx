@@ -6,13 +6,13 @@ export default function AboutPage() {
     <main className="max-w-4xl mx-auto py-16 px-4 space-y-12">
       
       <h1 className="text-4xl font-bold mb-3">About SkillSprint</h1>
-        <p className="text-xl font-bold text-red-600 mb-2">If u landed on this page on clicking any of those icons. I ain't building those pages. vroom vroom </p>
-        <p className="text-xl font-bold text-red-600 mb-4">And yes i wrote this with AI. Don't come crying to me "emmm u used ai to write /about page"</p>
+        <p className="text-xl font-bold text-red-600 mb-2">If u landed on this page on clicking any of those icons. I ain&apos;t building those pages. vroom vroom </p>
+        <p className="text-xl font-bold text-red-600 mb-4">And yes i wrote this with AI. Don&apos;t come crying to me &quot;emmm u used ai to write /about page&quot;</p>
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">What is SkillSprint?</h2>
         <p>
           SkillSprint is a web application designed to help users plan, track, and accelerate their learning journey. 
-          Whether you’re a beginner or looking to level up your skills, SkillSprint gives you a structured yet flexible way 
+          Whether you&apos;re a beginner or looking to level up your skills, SkillSprint gives you a structured yet flexible way 
           to grow.
         </p>
       </section>

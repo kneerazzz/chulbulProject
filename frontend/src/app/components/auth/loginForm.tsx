@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import {
@@ -19,6 +18,8 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { zodResolver } from '@hookform/resolvers/zod'
+
 
 const LoginSchema = z.object({
   identifier: z.string().min(1, {
@@ -64,9 +65,9 @@ export function LoginAuthForm() {
       });
 
       form.reset();
-    } catch (error) {
+    } catch (error: any) {
       toast.error("Login failed", {
-        description: "Please check your credentials.",
+        description: `Please check your credentials => ${error}`,
       });
     } finally {
       setIsLoading(false);

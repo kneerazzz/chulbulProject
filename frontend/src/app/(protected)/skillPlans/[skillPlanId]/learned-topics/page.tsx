@@ -9,7 +9,6 @@ import { Loader2, ChevronLeft, BookOpen, Calendar, ArrowRight, AlertCircle, File
 import { format } from "date-fns";
 import axios from "axios";
 import Link from "next/link";
-import { toast } from "sonner";
 
 interface Note {
   _id: string;

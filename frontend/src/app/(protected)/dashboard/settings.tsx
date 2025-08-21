@@ -3,15 +3,17 @@
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/app/components/ui/drawer"
 import { Button } from "@/app/components/ui/button"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
 import { User, LogOut, Lock, Edit } from "lucide-react"
-import { toast } from "sonner"
-import axios from "axios"
 import { logout } from "@/app/utils/logout"
 
-export default function SettingsDrawer({ open, onOpenChange }: { open: boolean, onOpenChange: (o: boolean) => void }) {
+export default function SettingsDrawer({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (o: boolean) => void
+}) {
   const router = useRouter()
-
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -37,3 +39,4 @@ export default function SettingsDrawer({ open, onOpenChange }: { open: boolean, 
     </Drawer>
   )
 }
+

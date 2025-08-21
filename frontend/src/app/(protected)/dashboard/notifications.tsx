@@ -1,5 +1,5 @@
-"use client";
-import { useEffect, useState } from "react";
+'use client'
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import {
   Sheet,
@@ -49,23 +49,20 @@ export default function NotificationDrawer({ open, onOpenChange }: NotificationD
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Fetch notifications based on active tab
-  const fetchNotifications = async () => {
+
+  const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
       let endpoint = "/api/notifications/get-notifications";
-      
       if (activeTab === "unread") {
         endpoint = "/api/notifications/unread-notifications";
       } else if (activeTab === "today") {
         endpoint = "/api/notifications/today-notifications";
       }
-      
-      const res = await axios.get(endpoint, {
-        withCredentials: true
-      });
+
+      const res = await axios.get(endpoint, { withCredentials: true });
       setNotifications(res.data.data || []);
-      
-      // Update unread count
+
       if (activeTab === "all") {
         const unread = (res.data.data || []).filter((n: Notification) => !n.isRead);
         setUnreadCount(unread.length);
@@ -75,48 +72,67 @@ export default function NotificationDrawer({ open, onOpenChange }: NotificationD
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]); // depends on activeTab
+
+  useEffect(() => {
+    if (open) {
+      fetchNotifications();
+    }
+  }, [open, activeTab, fetchNotifications]);
 
   // Mark all as read
   const markAllAsRead = async () => {
     try {
-      await axios.patch("/api/notifications/mark-all-read", {}, {withCredentials: true});
+      // Optimistically update local state
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
-      fetchNotifications(); // Refresh the list
+
+      await axios.patch("/api/notifications/mark-all-read", {}, { withCredentials: true });
     } catch (err) {
       console.error(err);
+      // Optionally: fetchNotifications() here to recover state if API failed
     }
   };
+
 
   // Mark single as read
   const markAsRead = async (id: string) => {
     try {
+      setNotifications(prev => {
+        const notif = prev.find(n => n._id === id);
+
+        // Only decrement if it was unread
+        if (notif && !notif.isRead) {
+          setUnreadCount(count => Math.max(0, count - 1));
+        }
+
+        return prev.map(n => n._id === id ? { ...n, isRead: true } : n);
+      });
+
       await axios.patch(`/api/notifications/mark-read?id=${id}`);
-      setUnreadCount(prev => Math.max(0, prev - 1));
-      // Update local state without refetching
-      setNotifications(prev => 
-        prev.map(n => n._id === id ? {...n, isRead: true} : n)
-      );
     } catch (err) {
       console.error(err);
     }
   };
 
+
   // Delete notification
-  const deleteNotification = async (id: string) => {
-    try {
-      await axios.delete(`/api/notifications/delete-notification?id=${id}`);
-      // Update local state without refetching
-      setNotifications(prev => prev.filter(n => n._id !== id));
-      // Update unread count if needed
-      const deletedNotif = notifications.find(n => n._id === id);
-      if (deletedNotif && !deletedNotif.isRead) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
+    const deleteNotification = async (id: string) => {
+      try {
+        setNotifications(prev => {
+          const deletedNotif = prev.find(n => n._id === id);
+          if (deletedNotif && !deletedNotif.isRead) {
+            setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+          }
+          return prev.filter(n => n._id !== id);
+        });
+
+        await axios.delete(`/api/notifications/delete-notification?id=${id}`);
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    };
+
 
   // Get notification icon based on type
   const getNotificationIcon = (type?: string) => {
@@ -134,11 +150,9 @@ export default function NotificationDrawer({ open, onOpenChange }: NotificationD
     }
   };
 
-  useEffect(() => {
-    if (open) {
-      fetchNotifications();
-    }
-  }, [open, activeTab]);
+  if(open){
+    fetchNotifications()
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

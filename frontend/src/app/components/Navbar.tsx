@@ -7,8 +7,6 @@ import Container from './ui/container';
 import { useAuth } from '@/store/auth';
 import { logout } from '../utils/logout';
 import { 
-  Bell, 
-  Settings, 
   User, 
   LogOut, 
   ChevronDown,
@@ -36,7 +34,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './ui/sheet';
-import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Separator } from './ui/separator';
 import NotificationDrawer from '@/app/(protected)/dashboard/notifications';

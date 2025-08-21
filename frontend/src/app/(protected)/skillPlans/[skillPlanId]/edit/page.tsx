@@ -1,48 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/app/components/ui/card";
-import { Progress } from "@/app/components/ui/progress";
-import { Badge } from "@/app/components/ui/badge";
 import { Label } from "@/app/components/ui/label";
 import { Input } from "@/app/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/app/components/ui/tabs";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { 
   Loader2, 
   ChevronLeft, 
-  Calendar, 
   Target, 
   Clock, 
   TrendingUp, 
-  Plus, 
-  Filter, 
-  Search, 
-  BookOpen,
-  BarChart3,
-  Award,
   Zap,
-  Brain,
-  ArrowRight,
-  Trophy,
-  Flame,
-  CalendarDays,
-  TargetIcon,
   Clock4,
-  Edit3,
   Trash2,
-  Star,
-  ChevronRight,
-  CheckCircle2,
-  Play,
-  Pause,
-  GanttChart
 } from "lucide-react";
-import { format, addDays, differenceInDays, isBefore, isAfter } from "date-fns";
+import { format, addDays,} from "date-fns";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -89,7 +65,7 @@ const PRIORITIES = [
 ];
 
 // Edit Skill Plan Component
-export function EditSkillPlanPage() {
+export default function EditSkillPlanPage() {
   const { skillPlanId } = useParams();
   const router = useRouter();
   const [skillPlan, setSkillPlan] = useState<SkillPlanDetail | null>(null);
@@ -375,16 +351,4 @@ export function EditSkillPlanPage() {
       </div>
     </div>
   );
-}
-
-// Skill Plans Overview Component
-
-// Main page component with routing
-export default function SkillPlansPage() {
-  const params = useParams();
-  
-  // If we're on the edit page, show the edit component
-  if (params.skillPlanId && params.skillPlanId !== "create") {
-    return <EditSkillPlanPage />;
-  }
 }

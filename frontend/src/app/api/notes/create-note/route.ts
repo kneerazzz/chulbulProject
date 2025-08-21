@@ -1,7 +1,6 @@
 import { API_BASE_URL } from "@/lib/api";
 import { requireAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { json } from "stream/consumers";
 
 
 export async function POST(req: NextRequest){
@@ -29,8 +28,8 @@ export async function POST(req: NextRequest){
             }
             const data = await backendRes.json()
             return NextResponse.json(data)
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error deleting topic", error)
-        return new NextResponse("Unauthorised", {status: 401})
+        return new NextResponse(error, {status: 401})
     }
 }

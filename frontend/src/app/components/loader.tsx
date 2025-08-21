@@ -2,7 +2,6 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils"; // optional utility if you have it for classNames
 
 export default function Loader() {
   return (
