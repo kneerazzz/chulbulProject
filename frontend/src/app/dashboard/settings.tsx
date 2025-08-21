@@ -38,7 +38,7 @@ export default function SettingsDrawer({ open, onOpenChange }: { open: boolean, 
           <Button variant="ghost" className="justify-start" onClick={() => router.push("/profile")}>
             <User className="w-4 h-4 mr-2" /> View Profile
           </Button>
-          <Button variant="ghost" className="justify-start" onClick={() => router.push("/profile/edit-profile")}>
+          <Button variant="ghost" className="justify-start" onClick={() => router.push("/profile/edit")}>
             <Edit className="w-4 h-4 mr-2" /> Edit Profile
           </Button>
           <Button variant="ghost" className="justify-start" onClick={() => router.push("/profile/change-password")}>

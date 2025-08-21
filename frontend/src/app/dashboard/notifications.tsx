@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-  DrawerDescription,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetDescription,
+} from "@/components/ui/sheet";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +82,7 @@ export default function NotificationDrawer({ open, onOpenChange }: NotificationD
   // Mark all as read
   const markAllAsRead = async () => {
     try {
-      await axios.patch("/api/notifications/mark-all");
+      await axios.patch("/api/notifications/mark-all-read", {}, {withCredentials: true});
       setUnreadCount(0);
       fetchNotifications(); // Refresh the list
     } catch (err) {
@@ -92,7 +93,7 @@ export default function NotificationDrawer({ open, onOpenChange }: NotificationD
   // Mark single as read
   const markAsRead = async (id: string) => {
     try {
-      await axios.patch(`/api/notifications/${id}/mark`);
+      await axios.patch(`/api/notifications/mark-read?id=${id}`);
       setUnreadCount(prev => Math.max(0, prev - 1));
       // Update local state without refetching
       setNotifications(prev => 
@@ -142,8 +143,8 @@ export default function NotificationDrawer({ open, onOpenChange }: NotificationD
   }, [open, activeTab]);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerTrigger asChild>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
@@ -155,18 +156,18 @@ export default function NotificationDrawer({ open, onOpenChange }: NotificationD
             </Badge>
           )}
         </Button>
-      </DrawerTrigger>
-      <DrawerContent className="h-[80vh]">
-        <DrawerHeader className="text-left border-b">
+      </SheetTrigger>
+      <SheetContent side="right" className="w-[400px] sm:w-[500px] flex flex-col">
+        <SheetHeader className="text-left border-b">
           <div className="flex justify-between items-center">
             <div>
-              <DrawerTitle className="flex items-center gap-2">
+              <SheetTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
                 Notifications
-              </DrawerTitle>
-              <DrawerDescription>
+              </SheetTitle>
+              <SheetDescription>
                 Manage your notifications
-              </DrawerDescription>
+              </SheetDescription>
             </div>
             {notifications.length > 0 && unreadCount > 0 && (
               <Button
@@ -180,7 +181,7 @@ export default function NotificationDrawer({ open, onOpenChange }: NotificationD
               </Button>
             )}
           </div>
-        </DrawerHeader>
+        </SheetHeader>
 
         <div className="p-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -236,8 +237,8 @@ export default function NotificationDrawer({ open, onOpenChange }: NotificationD
             </TabsContent>
           </Tabs>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -284,7 +285,7 @@ function NotificationList({
   }
 
   return (
-    <ScrollArea className="h-[50vh] pr-4">
+    <ScrollArea className="h-[80vh] pr-4">
       <div className="space-y-3">
         {notifications.map((notification) => (
           <div

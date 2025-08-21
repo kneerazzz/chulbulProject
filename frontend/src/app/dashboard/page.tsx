@@ -33,7 +33,6 @@ import SettingsDrawer from './settings'
 import NotificationDrawer from './notifications'
 import { useRouter } from "next/navigation"
 
-
 const Dashboard = () => {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -44,12 +43,8 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await axios.get(`/api/dashboard`, {
-            withCredentials: true
-        })
-        const data = res.data.data
-        console.log(data)
-        setData(data)
+        const res = await axios.get(`/api/dashboard`, { withCredentials: true })
+        setData(res.data.data)
       } catch (err) {
         console.error('Error fetching dashboard:', err)
       } finally {
@@ -59,13 +54,8 @@ const Dashboard = () => {
     fetchDashboard()
   }, [])
 
-  if (loading) {
-    return <div className="p-6 text-center">Loading dashboard...</div>
-  }
-
-  if (!data) {
-    return <div className="p-6 text-center">Failed to load dashboard</div>
-  }
+  if (loading) return <div className="p-6 text-center">Loading dashboard...</div>
+  if (!data) return <div className="p-6 text-center">Failed to load dashboard</div>
 
   const { user, stats, skillPlans, recentActivity, latestAchievement } = data
 
@@ -100,6 +90,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-8">
+
         {/* Header */}
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div className="flex items-center gap-4">
@@ -115,14 +106,28 @@ const Dashboard = () => {
               </p>
             </div>
           </div>
+
           <div className="flex items-center gap-3">
-            <Button variant="outline" className='cursor-pointer' size="icon">
-              <Bell className="h-5 w-5" onClick={() => setNotificationsOpen(true)} />
+            <Button
+              variant="outline"
+              size="icon"
+              className="cursor-pointer"
+              onClick={() => setNotificationsOpen(true)}
+            >
+              <Bell className="h-5 w-5" />
             </Button>
-            <Button variant="outline" size="icon" className='cursor-pointer' onClick={() => setSettingsOpen(true)}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="cursor-pointer"
+              onClick={() => setSettingsOpen(true)}
+            >
               <Settings className="h-5 w-5" />
             </Button>
-            <Button className="gap-2 cursor-pointer" onClick={() => router.push("/skills/create-skill") }>
+            <Button
+              className="gap-2 cursor-pointer"
+              onClick={() => router.push("/skills/new")}
+            >
               <PlusCircle className="h-4 w-4" /> New Skill
             </Button>
           </div>
@@ -139,10 +144,7 @@ const Dashboard = () => {
               <div className="text-2xl font-bold">
                 {stats.weeklyGoal.current}/{stats.weeklyGoal.target}
               </div>
-              <Progress
-                value={(stats.weeklyGoal.current / stats.weeklyGoal.target) * 100}
-                className="mt-2"
-              />
+              <Progress value={(stats.weeklyGoal.current / stats.weeklyGoal.target) * 100} className="mt-2" />
             </CardContent>
           </Card>
 
@@ -155,10 +157,7 @@ const Dashboard = () => {
               <div className="text-2xl font-bold">
                 {user.completedSkills}/{user.totalSkills}
               </div>
-              <Progress
-                value={(user.completedSkills / user.totalSkills) * 100}
-                className="mt-2"
-              />
+              <Progress value={(user.completedSkills / user.totalSkills) * 100} className="mt-2" />
             </CardContent>
           </Card>
 
@@ -169,9 +168,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.averageDaily.time}h</div>
-              <p className="text-xs text-muted-foreground">
-                Daily avg
-              </p>
+              <p className="text-xs text-muted-foreground">Daily avg</p>
             </CardContent>
           </Card>
 
@@ -197,14 +194,9 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {skillPlans.map((plan: any) => (
-                <div
-                  key={plan.id}
-                  className="p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition cursor-pointer"
-                >
+                <div key={plan.id} className="p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition cursor-pointer">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-muted-foreground">
-                      {plan.category}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{plan.category}</span>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(plan.status)}
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -255,8 +247,7 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="secondary" className="w-full justify-start gap-2">
-                  <BookMarked className="h-4 w-4 text-blue-500" /> Continue
-                  Learning
+                  <BookMarked className="h-4 w-4 text-blue-500" /> Continue Learning
                 </Button>
                 <Button variant="secondary" className="w-full justify-start gap-2">
                   <BarChart3 className="h-4 w-4 text-green-500" /> View Analytics
@@ -280,11 +271,9 @@ const Dashboard = () => {
                   <p className="text-base font-medium text-white">
                     🎉 {latestAchievement?.title}
                   </p>
-                  <p className="text-sm text-zinc-400">
-                    {latestAchievement?.description}
-                  </p>
-                  <Button 
-                    variant="secondary" 
+                  <p className="text-sm text-zinc-400">{latestAchievement?.description}</p>
+                  <Button
+                    variant="secondary"
                     className="w-fit mt-2 text-black bg-amber-400 hover:bg-amber-500 rounded-xl px-4"
                   >
                     View All Achievements
@@ -294,6 +283,8 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
+
+        {/* Drawers */}
         <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
         <NotificationDrawer open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       </div>

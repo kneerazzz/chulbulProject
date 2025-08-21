@@ -1,4 +1,4 @@
-// app/api/auth/change-password/route.ts
+// app/api/auth/change-profilepic/route.ts
 import { API_BASE_URL } from "@/lib/api";
 import { requireAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -6,30 +6,29 @@ import { NextRequest, NextResponse } from "next/server";
 export async function PATCH(req: NextRequest) {
   try {
     const token = await requireAuth();
-    const body = await req.json();
 
-    const backendRes = await fetch(`${API_BASE_URL}/users/change-password`, {
+    // ✅ Convert Next.js request into FormData
+    const formData = await req.formData();
+
+    const backendRes = await fetch(`${API_BASE_URL}/users/update-profile-pic`, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         cookie: req.headers.get("cookie") || "",
+        // ❌ don't set Content-Type, fetch handles FormData automatically
       },
-      body: JSON.stringify(body),
+      body: formData, // ✅ forward the real FormData
     });
 
     if (!backendRes.ok) {
-      const error = await backendRes.json();
-      return NextResponse.json(error, { status: backendRes.status });
+      const error = await backendRes.text();
+      return new NextResponse(error, { status: backendRes.status });
     }
 
     const data = await backendRes.json();
     return NextResponse.json(data);
   } catch (err) {
     console.error("Proxy error:", err);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
