@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-import { type } from "os";
-import { title } from "process";
-import { stringify } from "querystring";
 
 const skillPlanSchema = new mongoose.Schema({
     skill: {

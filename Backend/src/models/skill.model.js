@@ -18,7 +18,7 @@ const skillSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ["frontend", "backend", "ai-ml", "database", "devops", "web3", "cybersecurity", 'system-design']
+        enum: ["frontend", "backend", "ai-ml", "database", "devops", "web3", "cybersecurity", 'system-design', 'languages', 'business', 'other', 'marketing', 'design', 'management', 'algorithm']
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,

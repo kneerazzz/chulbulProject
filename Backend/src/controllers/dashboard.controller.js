@@ -9,7 +9,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const getDashboard = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).populate("completedSkills");
-
   if (!user) throw new ApiError(404, "User not found");
 
   // Fetch skill plans
@@ -52,15 +51,37 @@ const getDashboard = asyncHandler(async (req, res) => {
   );
 
   // Recent activity (based on updatedAt)
-  const recentActivity = skillPlans
-    .slice(0, 5)
-    .map((plan) => ({
-      skill: plan.skill.title,
-      time: plan.updatedAt,
-      type: plan.isCompleted ? "completed" : "updated",
-    }));
+  const recentActivity = skillPlans.slice(0, 5).map((plan) => ({
+    skill: plan.skill.title,
+    time: plan.updatedAt,
+    type: plan.isCompleted ? "completed" : "updated",
+  }));
 
-  // Stats
+  // -----------------------------
+  // 📊 Stats Calculation
+  // -----------------------------
+  // Notes-based accuracy (days user wrote notes / total active days)
+  const totalDays = skillPlans.reduce(
+    (acc, plan) => acc + plan.currentDay,
+    0
+  );
+  const daysWithNotes = await Notes.countDocuments({ user: user._id });
+
+  const accuracyScore =
+    totalDays > 0 ? Math.round((daysWithNotes / totalDays) * 100) : 0;
+
+  // Average daily time (past 7 days)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const lastWeekNotes = await Notes.countDocuments({
+    user: user._id,
+    createdAt: { $gte: sevenDaysAgo },
+  });
+
+  // Assume each note/topic ~ 1 hour study
+  const avgDailyTime = (lastWeekNotes / 7).toFixed(1);
+
   const stats = {
     weeklyGoal: {
       current: user.streak,
@@ -68,11 +89,11 @@ const getDashboard = asyncHandler(async (req, res) => {
       unit: "days",
     },
     accuracy: {
-      score: 87, // TODO: compute if you have metrics
+      score: accuracyScore,
       unit: "%",
     },
     averageDaily: {
-      time: 2.5, // TODO: calculate from user activity logs
+      time: avgDailyTime,
       unit: "hours",
     },
   };

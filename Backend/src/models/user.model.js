@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
     },
     interests: {
         type: [String],
-        enum: ['frontend', 'backend', 'ai-ml', 'devOps', 'cybersecurity', 'web3', 'database', 'system-design', 'algorithm'],
+        enum: ['frontend', 'backend', 'ai-ml', 'devOps', 'cybersecurity', 'web3', 'database', 'system-design', 'algorithm', 'management', 'languages', 'other', 'marketing', 'business', 'design'],
         default: []
     },
     skillLevel: {
