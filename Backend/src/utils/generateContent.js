@@ -1,29 +1,80 @@
 import { geminiClient } from "./geminiClient.js";
 import { ApiError } from "./apiError.js";
 
-const generateTopicContent = async ({ skillName, targetLevel = "beginner", category, duration, currentDay, completedSubtopics = [] }) => {
+const generateTopicContent = async ({
+  skillName,
+  targetLevel = "beginner",
+  category,
+  duration,
+  currentDay,
+  completedSubtopics = []
+}) => {
   try {
     const completedList = completedSubtopics.length
       ? `They have already completed the following topics:\n- ${completedSubtopics.map(sub => `${sub.title} (on ${new Date(sub.completedAt).toLocaleDateString()})`).join("\n- ")}`
       : `This is their first day, no topics completed yet.`;
 
+    const progressPercentage = Math.round((currentDay / duration) * 100);
+    const remainingDays = duration - currentDay;
+
     const prompt = `
-      You're an expert teacher helping someone learn ${skillName} (category: ${category}) at a ${targetLevel} level.
+You are a world-class educator and curriculum designer creating a comprehensive learning module for ${skillName} (category: ${category}).
 
-      The learner wants to complete the skill in ${duration} days. Today is Day ${currentDay}.
+LEARNER PROFILE:
+- Skill Level: ${targetLevel}
+- Total Learning Duration: ${duration} days
+- Current Progress: Day ${currentDay} of ${duration} (${progressPercentage}% complete)
+- Remaining Days: ${remainingDays}
+- ${completedList}
 
-      ${completedList}
+MISSION: Create today's lesson with substantially more comprehensive content than a typical tutorial. This should be a deep, engaging 15-20 minute learning experience.
 
-      Suggest a new and unique topic for today's lesson that hasn't been covered yet.
+CONTENT REQUIREMENTS:
+Generate rich, detailed educational content (1000-1500 words) that covers the topic thoroughly with:
 
-      Respond ONLY with raw JSON. DO NOT wrap it in triple backticks or markdown. No explanations, no formatting — just return the raw JSON object.
+**Structure your content as:**
+1. **Hook & Context** (150-200 words): Start with an engaging introduction that explains why this topic is crucial for mastering ${skillName}. Use real-world scenarios or compelling examples.
 
-      {
-        "topic": "Your topic title",
-        "description": "Short 1-2 sentence explanation of the topic",
-        "content": "A 10 min reading paragraphs(3-4) on the topic covering the core concepts or important concepts",
-        "optionalTip": "A useful tip or exercise for practice"
-      }
+2. **Core Concepts Deep Dive** (400-500 words): Provide comprehensive explanations of the main ideas:
+   * Break down complex concepts into digestible parts
+   * Use specific examples, analogies, and comparisons
+   * Include bullet points (*) for key principles
+   * Add concrete code examples, case studies, or practical scenarios
+   * Explain the "why" behind concepts, not just the "what"
+
+3. **Practical Implementation** (300-400 words): Show exactly how to apply these concepts:
+   * Step-by-step processes or methodologies
+   * Common use cases and real-world applications
+   * Best practices from industry professionals
+   * Specific tools, techniques, or frameworks
+   * Troubleshooting tips for common issues
+
+4. **Advanced Insights & Pro Tips** (200-250 words): Go beyond basics:
+   * Professional-level considerations
+   * Advanced techniques or optimizations
+   * Common pitfalls and how to avoid them
+   * How this topic connects to broader ${skillName} mastery
+   * Industry standards and emerging trends
+
+5. **Reinforcement & Synthesis** (100-150 words): Tie everything together with key takeaways and preview future connections.
+
+QUALITY STANDARDS:
+- Write in an engaging, conversational tone that keeps learners interested
+- Use specific, concrete examples rather than abstract explanations
+- Include plenty of bullet points (*) for better readability
+- Make content immediately actionable and practical
+- Ensure depth appropriate for ${targetLevel} level
+- Add variety with analogies, comparisons, and real-world connections
+
+RESPONSE FORMAT:
+Return ONLY raw JSON (no markdown, no code blocks, no explanations):
+
+{
+  "topic": "Clear, specific topic title",
+  "description": "Compelling 2-3 sentence overview that hooks the learner",
+  "content": "Your comprehensive 1000-1500 word educational content following the structure above. Make it engaging, detailed, and packed with practical value. Use bullet points (*) throughout for better readability.",
+  "optionalTip": "A valuable pro tip, exercise, or actionable advice"
+}
     `.trim();
 
     let rawResponse = await geminiClient(prompt);

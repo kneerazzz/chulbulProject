@@ -1,6 +1,4 @@
 import mongoose from "mongoose";
-import { StringDecoder } from "string_decoder";
-
 const skillSchema = new mongoose.Schema({
     title: {
         type: String,
