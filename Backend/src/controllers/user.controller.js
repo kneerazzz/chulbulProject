@@ -45,12 +45,10 @@ const registerUser = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Invalid email address")
     }
 
-    if(!validator.isStrongPassword(password, {
-        minLength: 6,
-    })){
-        throw new ApiError(400, "Password is not strong enough. Please change password")
+    if (password.length < 6) {
+        throw new ApiError(400, "Password must be at least 6 characters long");
+    
     }
-
     if(username.trim().length < 4){
         throw new ApiError(400, "Username should be bigger than 4 letters")
     }
