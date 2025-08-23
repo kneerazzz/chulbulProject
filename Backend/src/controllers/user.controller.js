@@ -47,8 +47,7 @@ const registerUser = asyncHandler(async(req, res) => {
     if(username.trim().length < 4){
         throw new ApiError(400, "Username should be bigger than 4 letters")
     }
-
-
+    
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
