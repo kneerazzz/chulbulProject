@@ -31,71 +31,74 @@ const generateAccessAndRefreshTokens = async(userId) => {
 }
 
 const registerUser = asyncHandler(async(req, res) => {
-    const {email, password, fullname, username} = req.body;
-    console.log("user Details", req.body)
-
-    if(
-        [fullname, email, username, password].some((index) => 
-            index?.trim() === "")
-    ) {
-        throw new ApiError(400, "All fields are required")
-    }
-
-    if(!validator.isEmail(email)){
-        throw new ApiError(400, "Invalid email address")
-    }
-    if(username.trim().length < 4){
-        throw new ApiError(400, "Username should be bigger than 4 letters")
-    }
+    try {
+        const {email, password, fullname, username} = req.body;
+        console.log("user Details", req.body)
     
-    const existedUser = await User.findOne({
-        $or: [{ username }, { email }]
-    })
-    if(existedUser) {
-        throw new ApiError(400, "User with similar username or email already exist")
+        if(
+            [fullname, email, username, password].some((index) => 
+                index?.trim() === "")
+        ) {
+            throw new ApiError(400, "All fields are required")
+        }
+    
+        if(!validator.isEmail(email)){
+            throw new ApiError(400, "Invalid email address")
+        }
+        if(username.trim().length < 4){
+            throw new ApiError(400, "Username should be bigger than 4 letters")
+        }
+        
+        const existedUser = await User.findOne({
+            $or: [{ username }, { email }]
+        })
+        if(existedUser) {
+            throw new ApiError(400, "User with similar username or email already exist")
+        }
+    
+        const user = await User.create({
+            username: username.toLowerCase(),
+            fullname,
+            email,
+            password, 
+        })
+    
+    
+        const createdUser = await User.findById(user._id).select(
+            "-password -refreshToken"
+        )
+    
+        const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(createdUser._id)
+    
+        const options = {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none"
+        }
+    
+        if(!createdUser){
+            throw new ApiError(500, "Something went wrong while creating user")
+        }
+    
+        await sendEmail({
+            to: createdUser.email,
+            subject: "Account creation rat",
+            text: `Congratulations ${createdUser.fullname}, you have officially joined rats`,
+            html: `<h1>Congratulations!</h1><p>On joinging rats <strong>${createdUser.fullname}</strong></p>`
+        })
+    
+    
+        return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(200, {user: createdUser, accessToken, refreshToken}, "User registered successfully")
+        )
+    } catch (error) {
+        console.log("Errro: ", error)
+        throw error;
     }
-
-
-    const user = await User.create({
-        username: username.toLowerCase(),
-        fullname,
-        email,
-        password, 
-    })
-
-
-    const createdUser = await User.findById(user._id).select(
-        "-password -refreshToken"
-    )
-
-    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(createdUser._id)
-
-    const options = {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none"
-    }
-
-    if(!createdUser){
-        throw new ApiError(500, "Something went wrong while creating user")
-    }
-
-    await sendEmail({
-        to: createdUser.email,
-        subject: "Account creation rat",
-        text: `Congratulations ${createdUser.fullname}, you have officially joined rats`,
-        html: `<h1>Congratulations!</h1><p>On joinging rats <strong>${createdUser.fullname}</strong></p>`
-    })
-
-
-    return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-        new ApiResponse(200, {user: createdUser, accessToken, refreshToken}, "User registered successfully")
-    )
-
 })
 
 const loginUser = asyncHandler(async(req, res) => {
