@@ -33,7 +33,6 @@ const generateAccessAndRefreshTokens = async(userId) => {
 const registerUser = asyncHandler(async(req, res) => {
     try {
         const {email, password, fullname, username} = req.body;
-        console.log("user Details", req.body)
     
         if(
             [fullname, email, username, password].some((index) => 
@@ -96,7 +95,7 @@ const registerUser = asyncHandler(async(req, res) => {
             new ApiResponse(200, {user: createdUser, accessToken, refreshToken}, "User registered successfully")
         )
     } catch (error) {
-        console.log("Errro: ", error)
+        console.log("Error: ", error)
         throw error;
     }
 })
