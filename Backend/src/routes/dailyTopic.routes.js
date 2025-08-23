@@ -1,6 +1,6 @@
 import {Router} from 'express'
 import { verifyJwt } from '../middlewares/auth.middleware.js';
-import { createDailyTopic, deleteTodayTopic, getAllLearnedTopics, getAllTopicsForPlan, getTodayTopic, getTopicByDay, regenerateTodayTopic } from '../controllers/dailyTopic.controller.js';
+import { deleteTodayTopic, ensureDailyTopic, getAllLearnedTopics, getAllTopicsForPlan, getTopicByDay, regenerateTodayTopic } from '../controllers/dailyTopic.controller.js';
 import { geminiLimiter } from '../middlewares/geminiLimiter.js';
 
 const router = Router()
@@ -9,7 +9,7 @@ const router = Router()
 router.route("/c/:skillPlanId/create-topic").get(
     verifyJwt,
     geminiLimiter,
-    createDailyTopic
+    ensureDailyTopic
 )
 
 router.route("/c/:skillPlanId/regenrate-topic").get(
@@ -21,11 +21,6 @@ router.route("/c/:skillPlanId/regenrate-topic").get(
 router.route("/c/:skillPlanId/get-learned-topics").get(
     verifyJwt,
     getAllLearnedTopics
-)
-
-router.route("/c/:skillPlanId/get-today-topic").get(
-    verifyJwt,
-    getTodayTopic
 )
 
 router.route("/c/:skillPlanId/get-all-topics").get(

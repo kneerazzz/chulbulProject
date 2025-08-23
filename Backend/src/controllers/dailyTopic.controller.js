@@ -8,72 +8,97 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { AiHistory } from "../models/aiHistory.model.js";
 
 
-const createDailyTopic = asyncHandler(async(req, res) => {
+const ensureDailyTopic = asyncHandler(async (req, res) => {
+  const { skillPlanId } = req.params;
+  const { day } = req.query;
+  const user = req.user;
 
-    const {skillPlanId} = req.params;
+  if (!skillPlanId || !day) {
+    throw new ApiError(400, "Bad request - skillPlanId or day missing");
+  }
+  if (!user) {
+    throw new ApiError(401, "Unauthorized - user not found");
+  }
 
-    if(!skillPlanId) {
-        throw new ApiError(400, "Bad request - skill plan id not found")
-    }
-    const user = req.user;
+  const skillPlan = await SkillPlan.findById(skillPlanId);
+  if (!skillPlan) {
+    throw new ApiError(404, "No skill plan with this ID found");
+  }
 
-    if(!user) {
-        throw new ApiError(400, "Auth middleware Broken - user not found")
-    }
+  const skill = await Skill.findById(skillPlan.skill);
+  if (!skill) {
+    throw new ApiError(404, "Skill not found for this plan");
+  }
 
-    const skillPlan = await SkillPlan.findById(skillPlanId)
+  // 1. check if topic already exists for this day
+  const existingTopic = await DailyTopic.findOne({
+    skillPlan: skillPlanId,
+    day: Number(day),
+  });
 
-    if(!skillPlan) {
-        throw new ApiError(400, "NO skill plan with Id found")
-    }
-
-    const skill = await Skill.findById(skillPlan.skill)
-
-
-    const {title: skillName, category} = skill
-
-    const {targetLevel, duration, currentDay, completedSubtopics} = skillPlan
-
-    const todayContent = await generateTopicContent({
-        skillName, targetLevel, category, duration, currentDay, completedSubtopics
-    })
-
-    if(completedSubtopics.some(sub => sub.title.toLowerCase() === todayContent.topic.toLowerCase())){
-        throw new ApiError(500, "AI returned the topic which is already generated. Please generation again")
-    }
-
-    const todayTopic = await DailyTopic.create({
-        topic: todayContent.topic,
-        description: todayContent.description,
-        content: todayContent.content,
-        skillPlan: skillPlan._id,
-        optionalTip: todayContent.optionalTip,
-        day: currentDay
-    })
-
-    await AiHistory.create({
-        user: user._id,
-        skillPlan: skillPlanId,
-        day: currentDay,
-        generatedTopics: [
-            {
-                title: todayContent.topic,
-                generatedAt: new Date(),
-                model: "Gemini 1.5 pro"
-            }
-        ]
-    })
-
-    if(!todayTopic){
-        throw new ApiError(500, "Error creating today topic")
-    }
-
+  if (existingTopic) {
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200, todayTopic, "Today content and topic created successfully")
+      .status(200)
+      .json(new ApiResponse(200, { id: existingTopic._id, day: existingTopic.day }, `Day ${day} topic already exists`));
+  }
+
+  // 2. generate topic if not exists
+  const { title: skillName, category } = skill;
+  const { targetLevel, duration, completedSubtopics } = skillPlan;
+
+  const todayContent = await generateTopicContent({
+    skillName,
+    targetLevel,
+    category,
+    duration,
+    currentDay: Number(day),
+    completedSubtopics,
+  });
+
+  // 3. prevent duplicates
+  if (
+    completedSubtopics.some(
+      (sub) => sub.title.toLowerCase() === todayContent.topic.toLowerCase()
     )
-})
+  ) {
+    throw new ApiError(
+      500,
+      "AI returned a topic already completed. Please regenerate."
+    );
+  }
+
+  // 4. save new topic
+  const newTopic = await DailyTopic.create({
+    topic: todayContent.topic,
+    description: todayContent.description,
+    content: todayContent.content,
+    skillPlan: skillPlan._id,
+    optionalTip: todayContent.optionalTip,
+    day: Number(day),
+  });
+
+  if (!newTopic) {
+    throw new ApiError(500, "Error creating today's topic");
+  }
+
+  // 5. log history
+  await AiHistory.create({
+    user: user._id,
+    skillPlan: skillPlanId,
+    day: Number(day),
+    generatedTopics: [
+      {
+        title: todayContent.topic,
+        generatedAt: new Date(),
+        model: "Gemini 1.5 Pro",
+      },
+    ],
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, { id: newTopic._id, day: newTopic.day }, `Day ${day} topic created successfully`));
+});
 
 
 const regenerateTodayTopic = asyncHandler(async(req, res) => {
@@ -174,46 +199,6 @@ const getAllLearnedTopics = asyncHandler(async(req, res) => {
     .json(
         new ApiResponse(200, completedTopics, "Learned topics fetched")
     )
-})
-
-
-const getTodayTopic = asyncHandler(async(req, res) => {
-    const {skillPlanId} = req.params;
-
-    if(!skillPlanId){
-        throw new ApiError(400, "topic id not found")
-    }
-    const user = req.user;
-
-    if(!user){
-        throw new ApiError(400, "Auth middleware is broken - user not found")
-    }
-
-    const skillPlan = await SkillPlan.findById(skillPlanId)
-
-    if(!skillPlan){
-        throw new ApiError(400, 'Skill plan not found')
-    }
-
-    if(!skillPlan.user.equals(user._id)){
-        throw new ApiError(401, "Unauthorised access - can't access other's plan")
-    }
-
-    const todayTopic = await DailyTopic.findOne({
-        skillPlan: skillPlanId,
-        day: skillPlan.currentDay
-    })
-
-    if(!todayTopic){
-        throw new ApiError(500, "Error getting todays topic")
-    }
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, todayTopic, "Today content fetched successfully")
-    )
-
 })
 
 
@@ -345,8 +330,7 @@ const getTopicByDay = asyncHandler(async(req, res) => {
 export {
     getAllLearnedTopics,
     getAllTopicsForPlan,
-    createDailyTopic,
-    getTodayTopic,
+    ensureDailyTopic,
     regenerateTodayTopic,
     getTopicByDay,
     deleteTodayTopic
