@@ -46,9 +46,7 @@ const registerUser = asyncHandler(async(req, res) => {
     }
 
     if(!validator.isStrongPassword(password, {
-        minLength: 8,
-        minLowercase: 1,
-        minNumbers: 1,
+        minLength: 6,
     })){
         throw new ApiError(400, "Password is not strong enough. Please change password")
     }
