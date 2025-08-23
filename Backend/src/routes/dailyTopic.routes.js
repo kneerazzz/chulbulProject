@@ -8,7 +8,6 @@ const router = Router()
 
 router.route("/c/:skillPlanId/create-topic").get(
     verifyJwt,
-    geminiLimiter,
     ensureDailyTopic
 )
 
