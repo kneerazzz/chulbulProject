@@ -1,5 +1,6 @@
 import mongoose, { mongo } from "mongoose";
 import { Skill } from "../models/skill.model.js";
+import { SkillPlan } from "../models/skillPlan.model.js"
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -117,10 +118,22 @@ const getSkillById = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Invalid skill Id - No skills with this id found")
     }
 
+    const skillPlan = await SkillPlan.findOne({
+        user: user._id,
+        skill: skillId
+    })
+
+    if(!skillPlan){
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(200, {skill: skill, skillPlan: skillPlan}, "Skill fetched successfully")
+        )
+    }
     return res
     .status(200)
     .json(
-        new ApiResponse(200, skill, "Skill fetched successfully")
+        new ApiResponse(200, {skill: skill, skillPlan: skillPlan}, "Skill fetched successfully")
     )
 })
 
