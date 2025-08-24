@@ -11,19 +11,19 @@ const ContentResponseSchema = z.object({
   
   description: z.string()
     .min(20, "Description must be at least 20 characters")
-    .max(300, "Description must be less than 300 characters")
+    .max(2000, "Description must be less than 2000 characters")
     .refine(val => val.trim().length > 0, "Description cannot be empty or whitespace"),
   
   content: z.string()
     .min(800, "Content must be at least 800 characters for comprehensive learning")
-    .max(5000, "Content should not exceed 5000 characters")
+    .max(10000, "Content should not exceed 10000 characters")
     .refine(val => val.includes('#'), "Content must include markdown headers")
     .refine(val => val.includes('##'), "Content must have proper section structure")
     .refine(val => val.trim().length > 0, "Content cannot be empty or whitespace"),
   
   optionalTip: z.string()
     .min(10, "Optional tip should be at least 10 characters if provided")
-    .max(500, "Optional tip should be less than 500 characters")
+    .max(2000, "Optional tip should be less than 2000 characters")
     .optional()
     .or(z.null())
 });
