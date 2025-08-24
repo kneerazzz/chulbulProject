@@ -60,48 +60,195 @@ const getJSONSchema = () => ({
 });
 
 /**
- * Enhanced JSON extraction with better error handling
+ * COMPLETELY REWRITTEN JSON extraction - fixes the double-escaping issue
  */
 const extractJSON = (rawResponse) => {
   let cleaned = rawResponse.trim();
   
-  // Remove code block wrappers
+  console.log("🔧 Starting JSON extraction...");
+  console.log("📋 Original length:", cleaned.length);
+  console.log("📋 First 100 chars:", cleaned.substring(0, 100));
+  
+  // Step 1: Remove code block wrappers
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '');
     cleaned = cleaned.replace(/\n?```\s*$/, '');
+    console.log("✂️  Removed code blocks");
   }
   
-  // Remove backticks
+  // Step 2: Remove backticks
   cleaned = cleaned.replace(/^`+|`+$/g, '');
   
-  // Find JSON boundaries
+  // Step 3: Find JSON boundaries
   const jsonStart = cleaned.indexOf('{');
   const jsonEnd = cleaned.lastIndexOf('}');
   
-  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-    cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+  if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
+    console.error("❌ No valid JSON boundaries found");
+    return null;
   }
   
-  // Clean up extra text
-  cleaned = cleaned.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+  cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+  console.log("✂️  Extracted JSON boundaries");
+  console.log("📋 After boundaries:", cleaned.substring(0, 100));
   
-  // Fix common JSON issues
+  // Step 4: Fix the MAIN ISSUE - Handle escaped characters properly
+  try {
+    // Try to parse as-is first (sometimes it's already valid)
+    JSON.parse(cleaned);
+    console.log("✅ JSON is already valid!");
+    return cleaned;
+  } catch (e) {
+    console.log("🔧 JSON needs fixing, applying corrections...");
+  }
+  
+  // Step 5: Fix common issues WITHOUT breaking valid escaping
   cleaned = cleaned
-    .replace(/,\s*}/g, '}')     // Remove trailing commas in objects
-    .replace(/,\s*]/g, ']')     // Remove trailing commas in arrays
-    .replace(/\n/g, '\\n')      // Escape newlines
-    .replace(/\r/g, '\\r')      // Escape carriage returns  
-    .replace(/\t/g, '\\t')      // Escape tabs
-    .replace(/\\/g, '\\\\')     // Escape backslashes (but not if already escaped)
-    .replace(/"/g, '\\"')       // Escape quotes (this might be too aggressive)
-    .replace(/\\"/g, '"');      // Fix over-escaped quotes
+    .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
+    .replace(/\\n/g, '\n')          // Fix double-escaped newlines  
+    .replace(/\\r/g, '\r')          // Fix double-escaped returns
+    .replace(/\\t/g, '\t')          // Fix double-escaped tabs
+    .replace(/\\\\/g, '\\');        // Fix double-escaped backslashes
   
-  return cleaned.trim();
+  console.log("🔧 Applied basic fixes");
+  console.log("📋 After fixes:", cleaned.substring(0, 100));
+  
+  // Step 6: Try parsing again
+  try {
+    JSON.parse(cleaned);
+    console.log("✅ JSON fixed and valid!");
+    return cleaned;
+  } catch (e) {
+    console.log("⚠️  Still invalid, trying aggressive fix...");
+  }
+  
+  // Step 7: Last resort - re-escape everything properly
+  try {
+    // Parse the malformed JSON by treating it as a raw string and reconstructing
+    const lines = cleaned.split('\n');
+    let inString = false;
+    let result = '';
+    
+    for (let line of lines) {
+      // Count unescaped quotes to track if we're inside a string
+      let escapedQuotes = 0;
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] === '"' && (i === 0 || line[i-1] !== '\\')) {
+          escapedQuotes++;
+        }
+      }
+      
+      if (escapedQuotes % 2 === 1) {
+        inString = !inString;
+      }
+      
+      // If we're inside a string value, preserve the line break
+      if (inString && result.length > 0) {
+        result += '\\n';
+      } else if (result.length > 0) {
+        result += '\n';
+      }
+      
+      result += line;
+    }
+    
+    console.log("🔧 Applied aggressive reconstruction");
+    return result;
+    
+  } catch (e) {
+    console.error("❌ All JSON fixes failed:", e.message);
+    return null;
+  }
 };
 
 /**
- * Zod-powered validation with detailed error messages
+ * Alternative extraction method using regex
  */
+const extractWithRegex = (rawResponse) => {
+  console.log("🔧 Using regex extraction method...");
+  
+  // Find JSON using regex pattern
+  const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    return null;
+  }
+  
+  let extracted = jsonMatch[0];
+  
+  // Clean up the extracted JSON
+  extracted = extracted
+    .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
+    .replace(/\\n/g, '\n')          // Fix newlines
+    .replace(/\\r/g, '\r')          // Fix carriage returns
+    .replace(/\\t/g, '\t');         // Fix tabs
+  
+  return extracted;
+};
+
+/**
+ * Manual parsing as last resort - builds valid JSON from scratch
+ */
+const extractWithManualParsing = (rawResponse) => {
+  console.log("🔧 Using manual parsing method...");
+  
+  try {
+    // Find the content between first { and last }
+    const start = rawResponse.indexOf('{');
+    const end = rawResponse.lastIndexOf('}');
+    
+    if (start === -1 || end === -1) return null;
+    
+    const content = rawResponse.substring(start + 1, end);
+    
+    // Extract fields manually using patterns
+    const topicMatch = content.match(/"topic"\s*:\s*"([^"]+)"/);
+    const descMatch = content.match(/"description"\s*:\s*"([^"]+)"/);
+    const tipMatch = content.match(/"optionalTip"\s*:\s*"([^"]+)"/);
+    
+    // Extract content field (more complex due to multiline)
+    const contentStart = content.indexOf('"content"');
+    if (contentStart === -1) return null;
+    
+    const contentValueStart = content.indexOf('"', contentStart + 9); // Skip "content":
+    if (contentValueStart === -1) return null;
+    
+    let contentValue = '';
+    let pos = contentValueStart + 1;
+    let inEscape = false;
+    
+    while (pos < content.length) {
+      const char = content[pos];
+      
+      if (inEscape) {
+        contentValue += char;
+        inEscape = false;
+      } else if (char === '\\') {
+        contentValue += char;
+        inEscape = true;
+      } else if (char === '"') {
+        // End of content value
+        break;
+      } else {
+        contentValue += char;
+      }
+      pos++;
+    }
+    
+    // Build valid JSON object
+    const result = {
+      topic: topicMatch ? topicMatch[1] : '',
+      description: descMatch ? descMatch[1] : '',
+      content: contentValue,
+      optionalTip: tipMatch ? tipMatch[1] : null
+    };
+    
+    return JSON.stringify(result);
+    
+  } catch (error) {
+    console.error("Manual parsing failed:", error.message);
+    return null;
+  }
+};
 const validateWithZod = (data) => {
   try {
     // Parse and validate with Zod
@@ -279,10 +426,32 @@ RESPONSE FORMAT (JSON only):
 }
     `.trim();
 
-    // Use retry mechanism with Zod validation
+    // Use retry mechanism with multiple strategies
     const result = await retryWithBackoff(async () => {
       console.log(`🚀 Generating content for ${skillName} - Day ${currentDay}...`);
       
+      // Strategy 1: Try structured output first (if your Gemini client supports it)
+      try {
+        console.log("🎯 Attempting structured output...");
+        const structuredResponse = await geminiClient(prompt, {
+          responseSchema: jsonSchema,
+          temperature: 0.7,
+          maxOutputTokens: 8192
+        });
+        
+        // If structured output worked, it should be valid JSON
+        const parsed = JSON.parse(structuredResponse);
+        const validation = validateWithZod(parsed);
+        
+        if (validation.isValid) {
+          console.log("✅ Structured output successful!");
+          return validation.data;
+        }
+      } catch (structuredError) {
+        console.log("⚠️  Structured output failed, trying manual parsing...");
+      }
+      
+      // Strategy 2: Manual JSON parsing with enhanced cleaning
       const rawResponse = await geminiClient(prompt);
       
       if (!rawResponse || typeof rawResponse !== 'string') {
@@ -291,20 +460,36 @@ RESPONSE FORMAT (JSON only):
       
       console.log("📝 Raw AI Response Preview:", rawResponse.substring(0, 200) + "...");
       
-      // Enhanced JSON extraction
-      const cleanedResponse = extractJSON(rawResponse);
+      // Try multiple extraction methods
+      let parsed = null;
+      const extractionMethods = [
+        () => extractJSON(rawResponse),
+        () => extractWithRegex(rawResponse),
+        () => extractWithManualParsing(rawResponse)
+      ];
       
-      if (!cleanedResponse) {
-        throw new ApiError(500, "Could not extract JSON from AI response");
+      for (const [index, method] of extractionMethods.entries()) {
+        try {
+          console.log(`🔧 Trying extraction method ${index + 1}...`);
+          const cleanedResponse = method();
+          
+          if (!cleanedResponse) {
+            console.log(`❌ Method ${index + 1} failed to extract JSON`);
+            continue;
+          }
+          
+          parsed = JSON.parse(cleanedResponse);
+          console.log(`✅ Method ${index + 1} successful!`);
+          break;
+          
+        } catch (error) {
+          console.log(`❌ Method ${index + 1} failed:`, error.message);
+          continue;
+        }
       }
       
-      let parsed;
-      try {
-        parsed = JSON.parse(cleanedResponse);
-      } catch (parseError) {
-        console.error("❌ JSON Parse Error:", parseError.message);
-        console.error("🔍 Cleaned Response Sample:", cleanedResponse.substring(0, 500) + "...");
-        throw new ApiError(500, `Invalid JSON format in AI response: ${parseError.message}`);
+      if (!parsed) {
+        throw new ApiError(500, "All JSON extraction methods failed");
       }
       
       // Zod validation with detailed feedback
