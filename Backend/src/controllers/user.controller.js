@@ -89,8 +89,14 @@ const registerUser = asyncHandler(async(req, res) => {
     
         return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
+        .cookie("accessToken", accessToken, {
+            ...options,
+            maxAge: 24 * 60 * 60 * 1000
+        })
+        .cookie("refreshToken", refreshToken, {
+            ...options,
+            maxAge: 15 * 24 * 60 * 60 * 1000
+        })
         .json(
             new ApiResponse(200, {user: createdUser, accessToken, refreshToken}, "User registered successfully")
         )
@@ -134,8 +140,14 @@ const loginUser = asyncHandler(async(req, res) => {
 
     return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, {
+        ...options,
+        maxAge: 24 * 60 * 60 * 1000
+    })
+    .cookie("refreshToken", refreshToken, {
+        ...options,
+        maxAge: 15 * 24 * 60 * 60 * 1000
+    })
     .json(
         new ApiResponse(200, {
             user: loggedInUser, accessToken, refreshToken
@@ -160,7 +172,8 @@ const logoutUser = asyncHandler(async(req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "none"
     }
 
 
@@ -193,27 +206,29 @@ const updateUserDetails = asyncHandler(async(req, res) =>{
         throw new ApiError(400, "Nothing to update here")
     }
 
-    if(username && username.toLowerCase() !== req.user?.username){
-        const existingUser = await User.findOne({username: username})
+    if (username) {
+        const normalizedUsername = username.trim().toLowerCase();
 
-        if(existingUser){
-            throw new ApiError(400, "user with this username already exist")
+        if (normalizedUsername !== req.user?.username) {
+            const existingUser = await User.findOne({ username: normalizedUsername });
+            if (existingUser) {
+                throw new ApiError(400, "User with this username already exists");
+            }
         }
-
     }
 
-    if(username){
-        username = username.trim().toLowerCase();
-    }
+    const updateData = {};
+    if (username) updateData.username = username.trim().toLowerCase();
+    if (fullname) updateData.fullname = fullname;
+    if (bio) updateData.bio = bio;
+    if (interests) updateData.interests = interests;
 
-    const user = await User.findByIdAndUpdate(req.user?._id, {
-        $set: {
-            username: username || req.user.username,
-            fullname: fullname || req.user.fullname,
-            bio: bio || req.user.bio,
-            interests: interests || req.user.interests
-        }
-    }, {new: true}).select("-password -refreshToken")
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: updateData },
+        { new: true }
+    ).select("-password -refreshToken");
+
 
     let recommendations = [];
 
@@ -326,7 +341,8 @@ const refreshAcessToken = asyncHandler(async(req, res) => {
 
         const options = {
             httpOnly: true,
-            secure: true
+            secure: true,
+            sameSite: 'none'
         }
 
         const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
@@ -337,16 +353,20 @@ const refreshAcessToken = asyncHandler(async(req, res) => {
 
         return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
+        .cookie("accessToken", accessToken, {
+            ...options,
+            maxAge: 24 * 60 * 60 * 1000
+        })
+        .cookie("refreshToken", refreshToken, {
+            ...options,
+            maxAge: 15 * 24 * 60 * 60 * 1000
+        })
         .json(
             new ApiResponse(200, {}, "Access token refreshed successfully!")
         )
         
     } catch (error) {
-
-        throw new ApiError(401, error?.message || "Invalid refresh token")
-        
+       throw new ApiError(401, error?.message || "Invalid refresh token")   
     }
 })
 
