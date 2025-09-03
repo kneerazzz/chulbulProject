@@ -7,7 +7,7 @@ import cookieParser from "cookie-parser"
 const app = express();
 
 const allowedOrigins = process.env.NODE_ENV === "production"
-    ? ["https://chulbul.vercel.app"]
+    ? ["https://gradiva.vercel.app"]
     : ["http://localhost:3000"];
 
 app.use(cors({
